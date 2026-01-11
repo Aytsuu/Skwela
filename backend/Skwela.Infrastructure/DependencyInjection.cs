@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Skwela.Infrastructure.Data;
 using Skwela.Application.Interfaces;
 using Skwela.Infrastructure.Services;
+using Skwela.Infrastructure.Repositories;
 
 namespace Skwela.Infrastructure;
 
@@ -19,7 +20,9 @@ public static class DependencyInjection
                 b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
             ));
 
-        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<AuthService>();
+        services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IClassroomRepository, ClassroomRepository>();
 
         return services;
     }

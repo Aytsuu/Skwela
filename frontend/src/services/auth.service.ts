@@ -14,6 +14,7 @@ export const AuthService = {
   },
   logout: async () => {
     Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
     redirect('/login')
   },
   signup: async (data: SignupRequest) => {

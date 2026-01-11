@@ -2,20 +2,35 @@ import { useMutation } from "@tanstack/react-query"
 import { AuthService } from "../services/auth.service"
 import Cookies from 'js-cookie';
 import { useRouter } from "next/navigation";
+import { useAuth } from "../components/context/AuthContext";
+import { UserProfile } from "../types/auth";
 
 export const useLogin = () => {
   const router = useRouter();
+  const { storeUser } = useAuth();
   return useMutation({
     mutationFn: AuthService.login,
     onSuccess: (data) => {
-      const sixtyMinutes = new Date(new Date().getTime() + 10 * 60 * 1000);
-      Cookies.set('accessToken', data.token, {
-        expires: sixtyMinutes, // 10 mins
+
+      const { accessToken, refreshToken, ...rest } = data;
+
+      const sixtyMinutes = new Date(new Date().getTime() + 60 * 60 * 1000);
+      Cookies.set('accessToken', accessToken, {
+        expires: sixtyMinutes, // 60 mins
         secure: true,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: '/'
       })
 
-       router.push('/dashboard')
+      Cookies.set('refreshToken', refreshToken, {
+        expires: 7, // 7 days
+        secure: true,
+        sameSite: 'Strict',
+        path: '/'
+      })
+
+      storeUser(rest as UserProfile);
+      router.push('/dashboard')
 
     }
   })

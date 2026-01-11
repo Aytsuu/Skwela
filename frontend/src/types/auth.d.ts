@@ -4,9 +4,16 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
-export interface SignupRequest extends LoginRequest {
-  
+export interface SignupRequest extends LoginRequest { }
+
+export interface UserProfile {
+  userId: string;
+  username: string;
+  displayName: string;
+  displayImage: string;
+  role: string;
 }

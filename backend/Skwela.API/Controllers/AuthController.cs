@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Skwela.Application.Interfaces;
+using Skwela.Application.UseCases.Auth;
 
 namespace Skwela.API.Controllers;
 
@@ -7,11 +8,15 @@ namespace Skwela.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly CreateUserUseCase _createUseCase;
+    private readonly GetUserUseCase _getUseCase;
+    private readonly UpdateUserUseCase _updateUseCase;
 
-    public AuthController(IAuthService authService)
+    public AuthController(CreateUserUseCase createUseCase, GetUserUseCase getUseCase, UpdateUserUseCase updateUseCase)
     {
-        _authService = authService;
+        _createUseCase = createUseCase;
+        _getUseCase = getUseCase;
+        _updateUseCase = updateUseCase;
     }
 
     [HttpPost("login")]
@@ -19,12 +24,9 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var token = await _authService.LoginAsync(
-                request.username,
-                request.password
-            );
+            var token = await _getUseCase.ExecuteLoginAsync(request);
 
-            return Ok(new { token });
+            return Ok(token);
         }
         catch (UnauthorizedAccessException)
         {
@@ -37,10 +39,7 @@ public class AuthController : ControllerBase
     {   
         try
         {
-            var userId = await _authService.SignupAsync(
-                request.username,
-                request.password
-            );
+            var userId = await _createUseCase.ExecuteAsync(request);
             return Ok(new { userId });
         }
         catch (InvalidDataException)
@@ -55,7 +54,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var result = await _authService.RefreshTokenAsync(request.accessToken, request.refreshToken);
+            var result = await _updateUseCase.ExecuteRefreshTokenAsync(request);
             return Ok(result);
         }
         catch (UnauthorizedAccessException)

@@ -1,74 +1,24 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Skwela.Application.Interfaces;
-using Skwela.Infrastructure.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Skwela.Domain.Entities;
-using Skwela.Domain.Enums;
-using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 
 
 namespace Skwela.Infrastructure.Services;
 
-public class AuthService : IAuthService
+public class AuthService
 {
-    private readonly AppDbContext _context;
     private readonly IConfiguration _config;
-    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context, IConfiguration config, ILogger<AuthService> logger)
+    public AuthService(IConfiguration config)
     {
-        _context = context;
         _config = config;
-        _logger = logger;
     }
 
-    public async Task<AuthResponse> LoginAsync(string username, string password)
-    {
-        _logger.LogInformation("Attempting to login user: {Username}", username);
-
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.username == username);
-
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.password))
-        {
-            throw new UnauthorizedAccessException("Invalid credentials.");
-        }
-
-        var accessToken = GenerateJwtToken(user);
-        var refreshToken = GenerateRefreshToken();
-
-        user.refreshToken = refreshToken;
-        user.refreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(20);
-        await _context.SaveChangesAsync();
-
-        return new AuthResponse(accessToken, refreshToken);
-    }
-
-    public async Task<AuthResponse> RefreshTokenAsync(string accessToken, string refreshToken)
-    {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.refreshToken == refreshToken);
-
-        if (user == null || user.refreshTokenExpiryTime <= DateTime.UtcNow)
-        {
-            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
-        }
-
-        var newAccessToken = GenerateJwtToken(user);
-        var newRefreshToken = GenerateRefreshToken();
-
-        user.refreshToken = newRefreshToken;
-        user.refreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(20);
-        await _context.SaveChangesAsync();
-
-        return new AuthResponse(accessToken, refreshToken);
-    }
-
-    private string GenerateRefreshToken()
+    public string GenerateRefreshToken()
     {
         var randomNumber = new byte[32]; 
         using var rng = RandomNumberGenerator.Create();
@@ -76,12 +26,14 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(randomNumber);
     }
 
-    private string GenerateJwtToken(User user)
+    public string GenerateJwtToken(User user)
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.user_id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.username),
+            new Claim(JwtRegisteredClaimNames.Name, user.display_name),
+            new Claim("display_image", user.display_image),
             new Claim(ClaimTypes.Role, user.role.ToString())
         };
 
@@ -101,33 +53,4 @@ public class AuthService : IAuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-    public async Task<string> SignupAsync(string username, string password)
-    {
-        _logger.LogInformation("Attempting to sign up user: {Username}", username);
-
-        var existingUser = await _context.Users
-             .FirstOrDefaultAsync(u => u.username == username);
-
-        if (existingUser != null)
-        {
-            throw new InvalidOperationException("Username already exists.");
-        }
-
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-
-        var user = new User
-        {
-            id = Guid.NewGuid(),
-            username = username,
-            password = hashedPassword,
-            role = UserRole.Student
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return user.id.ToString();
-    }
-
 }

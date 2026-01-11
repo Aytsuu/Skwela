@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Skwela.Infrastructure;
+using Skwela.Application;
 using System.Text;
 using Skwela.Infrastructure.Data;
 
@@ -17,6 +18,7 @@ if (string.IsNullOrEmpty(jwtKey))
 }
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrEmpty(conn))
@@ -56,6 +58,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+// Register Use Cases
+
 
 var app = builder.Build();
 
