@@ -22,7 +22,7 @@ export const useGetEnrolledClasses = (userId: string, role: string) => {
     queryKey: ['studentEnrolledClasses', userId],
     queryFn: () => EnrollmentService.getEnrolledClasses(userId),
     staleTime: 5000,
-    enabled: !!userId && role.toLowerCase() === 'student',
+    enabled: !!userId && role === 'student',
     retry: false
   })
 }

@@ -1,9 +1,11 @@
+using Skwela.Domain.Enums;
+
 public record AuthResponse(
     string accessToken, 
     string refreshToken,
-    string userId,
+    Guid userId,
     string username,
     string displayName,
     string displayImage,
-    string role
+    UserRole role
  );

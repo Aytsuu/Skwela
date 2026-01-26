@@ -28,7 +28,7 @@ public class AuthRepository : IAuthRepository
         return user;
     }
 
-    public async Task<object>  LoginAsync(string username, string password)
+    public async Task<User> LoginAsync(string username, string password)
     {
         var user = _context.Users.FirstOrDefault(u => u.username == username);
 
@@ -37,23 +37,13 @@ public class AuthRepository : IAuthRepository
             throw new UnauthorizedAccessException("Invalid credentials.");
         }
 
-        var accessToken = _authService.GenerateJwtToken(user);
         var refreshToken = _authService.GenerateRefreshToken();
 
         user.refreshToken = refreshToken;
         user.refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync();
 
-        return new
-        {
-            accessToken = accessToken,
-            refreshToken = refreshToken,
-            userId = user.user_id.ToString(),
-            username = user.username,
-            displayName = user.display_name,
-            displayImage = user.display_image,
-            role = user.role.ToString()
-        };
+        return user;    
     }
 
     public async Task<object> RefreshTokenAsync(string accessToken, string refreshToken)

@@ -5,6 +5,7 @@ using Skwela.Infrastructure;
 using Skwela.Application;
 using System.Text;
 using Skwela.Infrastructure.Data;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,12 @@ if (string.IsNullOrEmpty(conn))
 }
 
 builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => 
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+    
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -58,9 +65,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-// Register Use Cases
-
 
 var app = builder.Build();
 

@@ -8,12 +8,12 @@ export const useCreateClassroom = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: ClassroomService.create,
-    onSuccess: (data) => {
+    onSuccess: (data: ClassroomResponse) => {
       queryClient.invalidateQueries({ queryKey: ['classroomsByUserId'] });
       queryClient.setQueryData(['classroomById', user.userId], (old: ClassroomResponse[] = []) => [
         ...old,
         data
-      ])
+      ]);
     }
   })
 }
@@ -23,7 +23,7 @@ export const useGetClassroomsByUserId = (userId: string, role: string) => {
     queryKey: ['classroomsByUserId', userId],
     queryFn: () => ClassroomService.getByUserId(userId),
     staleTime: 5000,
-    enabled: !!userId && role.toLowerCase() === 'teacher',
+    enabled: !!userId && role === 'teacher',
     retry: false
   })
 }
@@ -34,5 +34,19 @@ export const useGetClassroomData = (classId: string, userId: string, role: strin
     queryFn: () => ClassroomService.getData(classId, userId, role),
     staleTime: 5000,
     enabled: !!classId && !!userId
+  })
+}
+
+export const useDeleteClassroom = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: ClassroomService.delete,
+    onSuccess: (_, classId) => {
+      queryClient.invalidateQueries({ queryKey: ['classroomsByUserId', user.userId]});
+      queryClient.setQueryData(['classroomsByUserId', user.userId], (old: ClassroomResponse[] = []) => 
+        old.filter((prev) => prev.class_id !== classId)
+      );
+    }
   })
 }

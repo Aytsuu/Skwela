@@ -4,6 +4,7 @@ using Skwela.Infrastructure.Data;
 using Skwela.Domain.Entities;
 using Skwela.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Skwela.Infrastructure.Repositories;
 
@@ -62,6 +63,21 @@ public class ClassroomRepository : IClassroomRepository
 
         return classroom;
 
+    }
+
+    public async Task RemoveClassroomAsync(Guid classId)
+    {
+        var hasStudent = await _context.Enrollments
+            .AnyAsync(e => e.class_id == classId && e.enrolled_status == "active");
+
+        if (hasStudent)
+        {
+            throw new InvalidOperationException("Cannot remove a class.");
+        }
+
+        await _context.Classrooms
+            .Where(e => e.class_id == classId)
+            .ExecuteDeleteAsync();
     }
 
 }

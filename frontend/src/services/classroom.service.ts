@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { ClassroomCreateRequest, ClassroomResponse } from "../types/classroom";
 import { api } from "./api.service";
 
@@ -21,6 +22,14 @@ export const ClassroomService = {
   getData: async (classId: string, userId: string, role: string) => {
     try {
       const res = await api.get<ClassroomResponse>(`api/classroom/get/${classId}/${userId}/${role}`);
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  },
+  delete: async (classId: string) => {
+    try {
+      const res = await api.delete(`api/classroom/delete/${classId}`);
       return res.data;
     } catch (err) {
       throw err;

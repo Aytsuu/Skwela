@@ -5,11 +5,12 @@ using System.Security.Claims;
 using System.Text;
 using Skwela.Domain.Entities;
 using System.Security.Cryptography;
-
+using Skwela.Application.Interfaces;
+using System.Text.Json;
 
 namespace Skwela.Infrastructure.Services;
 
-public class AuthService
+public class AuthService : IAuthService
 {
     private readonly IConfiguration _config;
 

@@ -18,7 +18,7 @@ public class GetClassroomUseCase
         return await _repository.GetClassroomsByUserIdAsync(userId);
     }
 
-    public async Task<ClassroomResponse> GetClassroomDataAsync(Guid classId, Guid userId, UserRole role)
+    public async Task<ClassroomResponse> ExecuteGetClassroomDataAsync(Guid classId, Guid userId, UserRole role)
     {
         var classData = await _repository.GetClassroomDataAsync(classId, userId, role);
 

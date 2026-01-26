@@ -2,10 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "../../../components/context/AuthContext";
-import { useGetClassroomData } from "../../../hooks/useClassroom";
+import { useDeleteClassroom, useGetClassroomData } from "../../../hooks/useClassroom";
 import { Button } from "../../../components/ui/button";
 import { useUpdateStatus } from "../../../hooks/useEnrollment";
 import { useEffect, useState } from "react";
+import Protected from "@/components/route/protected";
 
 export default function ClassroomPage() {
   const { user } = useAuth();
@@ -15,8 +16,12 @@ export default function ClassroomPage() {
 
   const [isMounted, setIsMounted] = useState(false);
 
-  const { mutateAsync: updateStatus } = useUpdateStatus()
-  const { data: classroomData } = useGetClassroomData(classId, user?.userId, user?.role)
+  const { mutateAsync: updateStatus } = useUpdateStatus();
+  const { mutateAsync: deleteClassroom } = useDeleteClassroom();
+  const { data: classroomData, error } = useGetClassroomData(classId, user?.userId, user?.role);
+  
+  // Flags
+  const isTeacher = user?.role == "teacher";
 
   // Effects
   useEffect(() => {
@@ -38,14 +43,30 @@ export default function ClassroomPage() {
     }
   }
 
+  const handleRemoveClassroom = async () => {
+    try {
+      await deleteClassroom(classId);
+      router.back();
+    } catch (err) {
+      alert("Failed to remove classroom. Please try again.");
+    } finally {
+
+    }
+  }
+ 
   if (!isMounted) return null;
 
   return (
-    <div>
-      {classroomData?.class_id}
-      {classroomData && (
-        <Button onClick={handleLeaveClass}>Leave Classroom</Button>
-      )}
-    </div>
+    <Protected error={error}>
+      <div>
+        {classroomData && !isTeacher && (
+          <Button onClick={handleLeaveClass}>Leave Classroom</Button>
+        )}
+
+        {classroomData && isTeacher && (
+          <Button onClick={handleRemoveClassroom}>Remove Classroom</Button>
+        )}
+      </div>
+    </Protected>
   )
 }   

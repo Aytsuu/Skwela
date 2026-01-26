@@ -20,6 +20,7 @@ import Link from "next/link";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  console.log(user)
   const createClassroomForm = useForm<z.infer<typeof classroomSchema>>({
     resolver: zodResolver(classroomSchema),
     defaultValues: {
@@ -80,10 +81,6 @@ export default function Dashboard() {
       setIsSubmitting(false);
       setIsOpenEnrollClass(false)
     }
-  }
-
-  const handleClassroomClick = (classId: string) => {
-      
   }
 
   const showDialog = () => {

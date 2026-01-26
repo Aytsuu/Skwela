@@ -12,11 +12,13 @@ public class ClassroomsController : ControllerBase
 {
     private readonly CreateClassroomUseCase _createUseCase;
     private readonly GetClassroomUseCase _getUseCase;
+    private readonly DeleteClassroomUseCase _deleteUseCase;
 
-    public ClassroomsController(CreateClassroomUseCase createUseCase, GetClassroomUseCase getUseCase)
+    public ClassroomsController(CreateClassroomUseCase createUseCase, GetClassroomUseCase getUseCase, DeleteClassroomUseCase deleteUseCase)
     {
         _createUseCase = createUseCase;
         _getUseCase = getUseCase;
+        _deleteUseCase = deleteUseCase;
     }
 
     [Authorize]
@@ -25,9 +27,9 @@ public class ClassroomsController : ControllerBase
     {
         try
         {
-            var classId = await _createUseCase.ExecuteAsync(request);
+            var classroom = await _createUseCase.ExecuteAsync(request);
 
-            return Ok(new { classId });
+            return Ok(classroom);
         }
         catch (Exception ex)
         {
@@ -56,7 +58,7 @@ public class ClassroomsController : ControllerBase
     {
         try
         {
-            var classroom = await _getUseCase.GetClassroomDataAsync(classId, userId, role);
+            var classroom = await _getUseCase.ExecuteGetClassroomDataAsync(classId, userId, role);
             return Ok(classroom);
         }
         catch (KeyNotFoundException knfEx)
@@ -66,6 +68,25 @@ public class ClassroomsController : ControllerBase
         catch (UnauthorizedAccessException uaEx)
         {
             return Forbid(uaEx.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("delete/{classId}")]
+    public async Task<IActionResult> DeleteClassroom(Guid classId)
+    {
+        try 
+        {
+            await _deleteUseCase.ExecuteRemoveClassroomAsync(classId);
+            return Ok();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            return Conflict(ioEx.Message);
         }
         catch (Exception ex)
         {

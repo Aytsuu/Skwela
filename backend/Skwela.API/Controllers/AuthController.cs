@@ -23,9 +23,9 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var token = await _getUseCase.ExecuteLoginAsync(request);
+            var user = await _getUseCase.ExecuteLoginAsync(request);
 
-            return Ok(token);
+            return Ok(user);
         }
         catch (UnauthorizedAccessException)
         {

@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<CreateEnrollmentUseCase>();
         services.AddScoped<GetEnrollmentUseCase>();
         services.AddScoped<UpdateEnrollmentUseCase>();
+        services.AddScoped<DeleteClassroomUseCase>();
 
         return services;
     }
