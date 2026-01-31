@@ -91,6 +91,10 @@ namespace Skwela.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("text");
@@ -109,8 +113,7 @@ namespace Skwela.Infrastructure.Migrations
 
                     b.Property<string>("username")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.HasKey("user_id");
 

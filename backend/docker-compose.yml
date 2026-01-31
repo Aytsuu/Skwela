@@ -1,0 +1,51 @@
+services:
+  skwela-cache:
+    image: redis:7-alpine
+    command: redis-server
+    ports:
+      - "6379:6379"
+    networks:
+      - skwela-net
+    volumes:
+      - redis_data:/data
+
+  skwela-api:
+    build:
+      dockerfile: Dockerfile
+    container_name: skwela-api
+    depends_on:
+      - skwela-db
+    networks:
+      - skwela-net
+    env_file:
+    - ./.env
+
+  skwela-db:
+    image: postgres:17-alpine
+    container_name: skwela-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - skwela-net
+    env_file:
+    - ./.env
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    networks:
+      - skwela-net
+    env_file:
+    - ./.env
+
+networks:
+  skwela-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

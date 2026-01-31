@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -33,6 +35,7 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.user_id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.username),
+            new Claim(JwtRegisteredClaimNames.Email, user.email),
             new Claim(JwtRegisteredClaimNames.Name, user.display_name),
             new Claim("display_image", user.display_image),
             new Claim(ClaimTypes.Role, user.role.ToString())

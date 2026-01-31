@@ -1,12 +1,8 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Skwela.Infrastructure;
 using Skwela.Application;
-using System.Text;
 using Skwela.Infrastructure.Data;
 using System.Text.Json.Serialization;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +23,6 @@ if (string.IsNullOrEmpty(conn))
     throw new InvalidOperationException("Database connection string is not configured.");
 }
 
-builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options => 
     {
@@ -35,32 +30,19 @@ builder.Services.AddControllers()
     });
     
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-            )
-        };
-    });
-
-
 builder.Services.AddAuthorization();
+
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(
+            "https://api.paoloaraneta.dev",
+            "http://skwela.local:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3000"
+        )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -71,7 +53,8 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseRouting();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();

@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userData: UserProfile = {
           userId: decode.sub,
           username: decode.unique_name,
+          email: decode.email,
           displayName: decode.name,
           displayImage: decode.display_image,
           role: decode['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],

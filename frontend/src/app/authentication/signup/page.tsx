@@ -75,7 +75,6 @@ export default function SignupPage() {
           />
 
           <Button type="submit">Sign Up</Button>
-          <Button variant={"outline"} type="button">Signin with Google</Button>
         </form>
       </Form>
     </div>

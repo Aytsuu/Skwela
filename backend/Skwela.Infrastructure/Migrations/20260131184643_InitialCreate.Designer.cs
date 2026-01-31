@@ -12,8 +12,8 @@ using Skwela.Infrastructure.Data;
 namespace Skwela.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260110210421_ModifiedAndAddProperties")]
-    partial class ModifiedAndAddProperties
+    [Migration("20260131184643_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -56,6 +56,29 @@ namespace Skwela.Infrastructure.Migrations
                     b.ToTable("Classrooms");
                 });
 
+            modelBuilder.Entity("Skwela.Domain.Entities.Enrollment", b =>
+                {
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("class_id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("enrolled_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("enrolled_status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("user_id");
+
+                    b.HasIndex("class_id");
+
+                    b.ToTable("Enrollments");
+                });
+
             modelBuilder.Entity("Skwela.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("user_id")
@@ -71,6 +94,10 @@ namespace Skwela.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("text");
@@ -82,17 +109,14 @@ namespace Skwela.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("role")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(2);
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("user_created_at")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("username")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.HasKey("user_id");
 
@@ -108,6 +132,25 @@ namespace Skwela.Infrastructure.Migrations
                         .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("Skwela.Domain.Entities.Enrollment", b =>
+                {
+                    b.HasOne("Skwela.Domain.Entities.Classroom", "classroom")
+                        .WithMany()
+                        .HasForeignKey("class_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Skwela.Domain.Entities.User", "user")
+                        .WithMany()
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("classroom");
 
                     b.Navigation("user");
                 });

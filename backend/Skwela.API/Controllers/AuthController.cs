@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Skwela.Application.UseCases.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 
 namespace Skwela.API.Controllers;
 
@@ -60,5 +63,32 @@ public class AuthController : ControllerBase
         {
             return Unauthorized("Invalid token.");
         }
+    }
+
+    [HttpGet("login-google")]
+    public IActionResult SigninWithGoogle()
+    {
+        return Challenge(
+            new AuthenticationProperties { RedirectUri = Url.Action("GoogleResponse")},
+            "Google"
+        );
+    }
+
+    [HttpGet("google-response")]
+    public async Task<IActionResult> GoogleResponse()
+    {
+        var result = await HttpContext.AuthenticateAsync("Cookies");
+
+        if (!result.Succeeded) return BadRequest("Google Auth Failed.");
+
+        var claims = result.Principal.Identities.FirstOrDefault()?.Claims;
+        var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        if (string.IsNullOrWhiteSpace(email)) {
+            return BadRequest("Failed to extract email.");
+        }
+
+        var tokens = await _getUseCase.ExecuteGoogleSigninAsync(email);
+        return Redirect($"http://skwela.local:3000/authentication/callback?token={tokens.accessToken}&refresh={tokens.refreshToken}");
     }
 }

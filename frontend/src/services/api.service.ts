@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Api instance
 export const api = axios.create({
-  baseURL: process.env.NODE_ENV == 'development' ? 'http://localhost:5251' : process.env.NEXT_API_URL
+  baseURL: "https://api.paoloaraneta.dev"
 })
 
 // Authorization interceptor

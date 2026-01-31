@@ -22,7 +22,12 @@ public class AuthRepository : IAuthRepository
 
     public async Task<User> SignupAsync(User user)
     {
-        _context.Users.Add(user);
+        if (!string.IsNullOrWhiteSpace(user.email)) {
+            user.refreshToken = _authService.GenerateRefreshToken();
+            user.refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        }
+
+        _context.Users.Add(user);    
         await _context.SaveChangesAsync();
 
         return user;
@@ -46,7 +51,7 @@ public class AuthRepository : IAuthRepository
         return user;    
     }
 
-    public async Task<object> RefreshTokenAsync(string accessToken, string refreshToken)
+    public async Task<User> RefreshTokenAsync(string accessToken, string refreshToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.refreshToken == refreshToken);
@@ -56,22 +61,20 @@ public class AuthRepository : IAuthRepository
             throw new UnauthorizedAccessException("Invalid or expired refresh token.");
         }
 
-        var newAccessToken = _authService.GenerateJwtToken(user);
         var newRefreshToken = _authService.GenerateRefreshToken();
 
         user.refreshToken = newRefreshToken;
         user.refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync();
 
-        return new
-        {
-            accessToken = accessToken,
-            refreshToken = refreshToken,
-            userId = user.user_id.ToString(),
-            username = user.username,
-            displayName = user.display_name,
-            displayImage = user.display_image,
-            role = user.role.ToString()
-        };
+        return user;
+    }
+    
+    public async Task<User> GoogleSigninAsync(string email)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.email == email);
+
+        return user!;
     }
 }

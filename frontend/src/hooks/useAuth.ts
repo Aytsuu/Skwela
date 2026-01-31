@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query"
-import { AuthService } from "../services/auth.service"
-import Cookies from 'js-cookie';
+import { useMutation } from "@tanstack/react-query";
+import { AuthService } from "../services/auth.service";
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/context/AuthContext";
 import { UserProfile } from "../types/auth";
@@ -11,34 +11,27 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: AuthService.login,
     onSuccess: (data) => {
-
       const { accessToken, refreshToken, ...rest } = data;
-      const isProduction = process.env.NODE_ENV === "production";
 
       const sixtyMinutes = new Date(new Date().getTime() + 60 * 60 * 1000);
-      Cookies.set('accessToken', accessToken, {
+      Cookies.set("accessToken", accessToken, {
         expires: sixtyMinutes, // 60 mins
-        secure: isProduction,
-        sameSite: 'Strict',
-        path: '/'
-      })
+        path: "/",
+      });
 
-      Cookies.set('refreshToken', refreshToken, {
+      Cookies.set("refreshToken", refreshToken, {
         expires: 7, // 7 days
-        secure: isProduction,
-        sameSite: 'Strict',
-        path: '/'
-      })
+        path: "/",
+      });
 
       storeUser(rest as UserProfile);
-      router.push('/dashboard');
-
-    }
-  })
-}
+      router.push("/dashboard");
+    },
+  });
+};
 
 export const useSignup = () => {
   return useMutation({
     mutationFn: AuthService.signup,
-  })
-}
+  });
+};

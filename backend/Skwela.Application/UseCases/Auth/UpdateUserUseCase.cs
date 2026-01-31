@@ -6,14 +6,21 @@ namespace Skwela.Application.UseCases.Auth;
 public class UpdateUserUseCase
 {
     private readonly IAuthRepository _authRepository;
+    private readonly IAuthService _authService;
 
-    public UpdateUserUseCase(IAuthRepository authRepository)
+    public UpdateUserUseCase(IAuthRepository authRepository, IAuthService authService)
     {
         _authRepository = authRepository;
+        _authService = authService;
     }
 
-    public async Task<object> ExecuteRefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<RefreshTokenResponse> ExecuteRefreshTokenAsync(RefreshTokenRequest request)
     {
-        return await _authRepository.RefreshTokenAsync(request.accessToken, request.refreshToken);
+        var user = await _authRepository.RefreshTokenAsync(request.accessToken, request.refreshToken);
+        
+        return new RefreshTokenResponse(
+            _authService.GenerateJwtToken(user),
+            user.refreshToken ?? string.Empty
+        );
     }
 }

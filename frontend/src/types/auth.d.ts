@@ -13,6 +13,7 @@ export interface SignupRequest extends LoginRequest { }
 export interface UserProfile {
   userId: string;
   username: string;
+  email: string;
   displayName: string;
   displayImage: string;
   role: string;

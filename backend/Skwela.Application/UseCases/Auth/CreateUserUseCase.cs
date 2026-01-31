@@ -15,7 +15,7 @@ public class CreateUserUseCase
     public async Task<User> ExecuteAsync(SignupRequest request)
     {
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.password);
-        var user = User.Build(request.username, hashedPassword);
+        var user = User.Build(null, request.username, hashedPassword);
         return await _authRepository.SignupAsync(user);
     }
 }

@@ -5,6 +5,7 @@ public record AuthResponse(
     string refreshToken,
     Guid userId,
     string username,
+    string email,
     string displayName,
     string displayImage,
     UserRole role
