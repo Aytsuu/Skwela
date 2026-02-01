@@ -1,3 +1,3 @@
-# AISkwela
+# Skwela
 
 
