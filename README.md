@@ -1,25 +1,35 @@
-# Skwela
+# 🎓 Skwela
+
+<div align="center">
+
+[![.NET](https://img.shields.io/badge/.NET-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![License](https://img.shields.io/badge/License-Proprietary-red)](LICENSE)
 
 A comprehensive full-stack application for classroom management and educational administration. Built with ASP.NET Core on the backend and Next.js on the frontend.
+
+</div>
 
 ## Overview
 
 Skwela is a modern, scalable platform designed to streamline classroom operations, student enrollment, and assignment management. The application follows clean architecture principles with a well-structured separation of concerns.
 
-### Tech Stack
+### 🛠️ Tech Stack
 
 **Backend:**
-- ASP.NET Core (.NET)
-- Entity Framework Core (ORM)
-- SQL Server (Database)
-- JWT Authentication
+- 🔵 **ASP.NET Core** (.NET) - Web API Framework
+- 🗄️ **Entity Framework Core** - ORM & Database Access
+- 💾 **SQL Server** - Relational Database
+- 🔐 **JWT Authentication** - Secure Token-Based Auth
 
 **Frontend:**
-- Next.js 16+ (React Framework)
-- TypeScript
-- TailwindCSS (Styling)
-- React Query (Data Fetching)
-- Radix UI (Component Primitives)
+- ⚡ **Next.js 16+** - React Meta-Framework
+- 📘 **TypeScript** - Type-Safe JavaScript
+- 🎨 **TailwindCSS** - Utility-First CSS Framework
+- 🔄 **React Query** - Server State Management
+- 🧩 **Radix UI** - Headless Component Library
 
 ## Project Structure
 
