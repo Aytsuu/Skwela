@@ -4,9 +4,14 @@ using Skwela.Application;
 using Skwela.Infrastructure.Data;
 using System.Text.Json.Serialization;
 
+/// <summary>
+/// Skwela API Application Entry Point
+/// Sets up all required services, middleware, and database configuration for the learning management system
+/// </summary>
 var builder = WebApplication.CreateBuilder(args);
 
 
+// Retrieve JWT secret key from configuration and validate it exists
 var jwtKey = builder.Configuration["Jwt:Key"];
 
 if (string.IsNullOrEmpty(jwtKey))
@@ -14,8 +19,13 @@ if (string.IsNullOrEmpty(jwtKey))
     throw new InvalidOperationException("JWT Key is not configured.");
 }
 
+// Register infrastructure services (database, repositories, authentication)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Register application services (use cases, business logic)
 builder.Services.AddApplication();
+
+// Retrieve database connection string and validate it exists
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrEmpty(conn))
@@ -23,20 +33,26 @@ if (string.IsNullOrEmpty(conn))
     throw new InvalidOperationException("Database connection string is not configured.");
 }
 
+// Configure controllers and JSON serialization to handle enums as strings
 builder.Services.AddControllers()
     .AddJsonOptions(options => 
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
     
+// Add Swagger/OpenAPI documentation generation
 builder.Services.AddSwaggerGen();
+
+// Add authorization policies
 builder.Services.AddAuthorization();
 
 
+// Configure CORS (Cross-Origin Resource Sharing) to allow frontend to access API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+        // Allow requests from specified frontend origins
         policy.WithOrigins(
             "https://api.paoloaraneta.dev",
             "http://skwela.local:3000",
@@ -48,17 +64,42 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Build the web application
 var app = builder.Build();
 
+// Enable Swagger documentation UI in development
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// app.UseHttpsRedirection();
+// Configure middleware pipeline
+// app.UseHttpsRedirection(); // Disabled for development
 app.UseRouting();
-app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontend"); // Apply CORS policy
 
-app.UseAuthentication();
-app.UseAuthorization();
+// Apply pending database migrations on application startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // This checks for any pending migrations and applies them to whatever 
+        // database is defined in your connection string.
+        context.Database.Migrate();
+        Console.WriteLine("Database migration applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
+// Configure additional middleware
+app.UseForwardedHeaders(); // Handle forwarded headers for proxy scenarios
+app.UseAuthentication(); // Enable JWT/Cookie authentication
+app.UseAuthorization(); // Enable authorization checks
+
+// Map controller endpoints and run the application
 app.MapControllers();
 app.Run();

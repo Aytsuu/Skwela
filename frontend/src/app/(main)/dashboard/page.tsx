@@ -1,21 +1,21 @@
 'use client';
 
 import { Plus } from "lucide-react";
-import { useAuth } from "../../components/context/AuthContext";
-import { Dialog, DialogFooter, DialogHeader } from "../../components/ui/dialog";
-import { DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form";
+import { useAuth } from "../../../components/context/AuthContext";
+import { Dialog, DialogFooter, DialogHeader } from "../../../components/ui/dialog";
+import { DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../../../components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import { classroomSchema } from "../../schemas/classroom.schema";
+import { classroomSchema } from "../../../schemas/classroom.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
 import { useEffect, useState } from "react";
-import { useCreateClassroom, useGetClassroomsByUserId } from "../../hooks/useClassroom";
-import { ClassroomResponse } from "../../types/classroom";
-import { enrollmentSchema } from "../../schemas/enrollment.schema";
-import { useCreateEnrollment, useGetEnrolledClasses } from "../../hooks/useEnrollment";
+import { useCreateClassroom, useGetClassroomsByUserId } from "../../../hooks/useClassroom";
+import { ClassroomResponse } from "../../../types/classroom";
+import { enrollmentSchema } from "../../../schemas/enrollment.schema";
+import { useCreateEnrollment, useGetEnrolledClasses } from "../../../hooks/useEnrollment";
 import Link from "next/link";
 
 export default function Dashboard() {

@@ -5,23 +5,34 @@ using Skwela.Application.UseCases.Enrollments;
 
 namespace Skwela.Application;
 
+/// <summary>
+/// Dependency Injection configuration for Application layer
+/// Registers all use cases and business logic services
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Registers application layer services with the dependency injection container
+    /// Called from Program.cs to set up all use cases
+    /// </summary>
+    /// <param name="services">The IServiceCollection to register services into</param>
+    /// <returns>The updated IServiceCollection for chaining</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-
-        // Classroom Use Cases
+        // Register Classroom Use Cases
         services.AddScoped<CreateClassroomUseCase>();
         services.AddScoped<GetClassroomUseCase>();
+        services.AddScoped<DeleteClassroomUseCase>();
+        
+        // Register Auth Use Cases
         services.AddScoped<CreateUserUseCase>();
         services.AddScoped<GetUserUseCase>();
         services.AddScoped<UpdateUserUseCase>();
 
-        // Enrollment Use Cases
+        // Register Enrollment Use Cases
         services.AddScoped<CreateEnrollmentUseCase>();
         services.AddScoped<GetEnrollmentUseCase>();
         services.AddScoped<UpdateEnrollmentUseCase>();
-        services.AddScoped<DeleteClassroomUseCase>();
 
         return services;
     }
