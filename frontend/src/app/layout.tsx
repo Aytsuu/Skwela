@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "./queryClientProvider";
 import { AuthProvider } from "../components/context/AuthContext";
+import { QueryClient } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Skwela",
   description: "",
-}
+};
 
 export default function RootLayout({
   children,
@@ -26,12 +29,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <Provider>
-            {children}
-          </Provider>
-        </AuthProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Provider>
+          <AuthProvider>{children}</AuthProvider>
+        </Provider>
       </body>
     </html>
   );

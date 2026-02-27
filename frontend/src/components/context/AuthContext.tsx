@@ -1,56 +1,64 @@
-'use client';
+"use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { UserProfile } from "../../types/auth";
-import Cookies from 'js-cookie';
-import { AuthService } from "../../services/auth.service";
-import { jwtDecode } from "jwt-decode"; 
+import { AuthService } from "@/services/auth.service";
+import { redirect } from "next/navigation";
+
 interface AuthContextType {
   user: UserProfile;
   storeUser: (userData: UserProfile) => void;
+  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<UserProfile>();
+  const [user, setUser] = useState<UserProfile | null>(null);
 
-  const storeUser = (userData: UserProfile) => {
+  const storeUser = (userData: UserProfile | null) => {
     setUser(userData);
-  }
+  };
+
+  const logout = async () => {
+    try {
+      await AuthService.logout();
+    } catch (error) {
+      console.error("Logout failed on the server, clearing local state anyway", error);
+    } finally {
+      setUser(null);
+      redirect('/authentication/login'); 
+    }
+  };
 
   useEffect(() => {
-    const restoreUser = () => {
-      const accessToken = Cookies.get('accessToken')
-
-      if (!accessToken) return;
-
+    const getCurrentUser = async () => {
       try {
-        const decode: any = jwtDecode(accessToken);
-        const userData: UserProfile = {
-          userId: decode.sub,
-          username: decode.unique_name,
-          email: decode.email,
-          displayName: decode.name,
-          displayImage: decode.display_image,
-          role: decode['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
-        }
-        setUser(userData);
-      } catch (error) {
-        alert("Invalid token found. Please login again.")
-        AuthService.logout();
-      }
-    }
+        const me = await AuthService.me();
 
-    restoreUser();
-  }, [])
+        // Store user data
+        setUser({
+          userId: me.userId,
+          email: me.email,
+          displayName: me.displayName,
+          role: me.role,
+        });
+      } catch (err) {
+        setUser(null)
+      } finally {
+        // Do nothing, let it finish 
+      }
+    };
+
+    getCurrentUser();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user: user!, storeUser }}>
+    <AuthContext.Provider value={{ user: user!, storeUser, logout }}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -60,4 +68,4 @@ export const useAuth = () => {
   }
 
   return context;
-}
+};

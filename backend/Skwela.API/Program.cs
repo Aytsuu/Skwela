@@ -3,6 +3,7 @@ using Skwela.Infrastructure;
 using Skwela.Application;
 using Skwela.Infrastructure.Data;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Cors;
 
 /// <summary>
 /// Skwela API Application Entry Point
@@ -60,7 +61,8 @@ builder.Services.AddCors(options =>
             "http://localhost:3000"
         )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 

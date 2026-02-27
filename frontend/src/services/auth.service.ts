@@ -1,21 +1,26 @@
-import { LoginRequest, LoginResponse, SignupRequest } from '../types/auth';
-import Cookies from 'js-cookie';
+import { LoginRequest, SignupRequest, UserProfile } from '../types/auth';
 import { redirect } from 'next/navigation';
 import { api } from './api.service';
 
 export const AuthService = {
+  me: async () => {
+    try {
+      const res =  await api.get<UserProfile>('api/auth/me');
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  },
   login: async (data: LoginRequest) => {
     try {
-      const res = await api.post<LoginResponse>('api/auth/login', data);
+      const res = await api.post<UserProfile>('api/auth/login', data);
       return res.data;
     } catch (err) {
       throw err;
     }
   },
   logout: async () => {
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
-    redirect('/login')
+    await api.post('api/auth/logout');
   },
   signup: async (data: SignupRequest) => {
     try {

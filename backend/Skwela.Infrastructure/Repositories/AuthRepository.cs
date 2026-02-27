@@ -84,11 +84,10 @@ public class AuthRepository : IAuthRepository
     /// Refreshes an expired JWT token using a valid refresh token
     /// Generates a new refresh token after validation
     /// </summary>
-    /// <param name="accessToken">The expired JWT token (for reference)</param>
     /// <param name="refreshToken">The refresh token to validate</param>
     /// <returns>The user entity with newly generated tokens</returns>
     /// <exception cref="UnauthorizedAccessException">Thrown if refresh token is invalid or expired</exception>
-    public async Task<User> RefreshTokenAsync(string accessToken, string refreshToken)
+    public async Task<User> RefreshTokenAsync(string refreshToken)
     {
         // Find user with the provided refresh token
         var user = await _context.Users

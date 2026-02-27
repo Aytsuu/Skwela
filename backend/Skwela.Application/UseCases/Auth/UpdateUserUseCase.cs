@@ -30,10 +30,10 @@ public class UpdateUserUseCase
     /// <param name="request">RefreshTokenRequest containing current access token and refresh token</param>
     /// <returns>RefreshTokenResponse with new JWT token and refresh token</returns>
     /// <exception cref="UnauthorizedAccessException">Thrown if refresh token is invalid or expired</exception>
-    public async Task<RefreshTokenResponse> ExecuteRefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<RefreshTokenResponse> ExecuteRefreshTokenAsync(string refreshToken)
     {
         // Validate refresh token and retrieve user
-        var user = await _authRepository.RefreshTokenAsync(request.accessToken, request.refreshToken);
+        var user = await _authRepository.RefreshTokenAsync(refreshToken);
         
         // Generate new JWT token and return response
         return new RefreshTokenResponse(

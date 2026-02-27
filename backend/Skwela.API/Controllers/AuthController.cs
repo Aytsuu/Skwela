@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Skwela.Application.UseCases.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims; 
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System;
 
 namespace Skwela.API.Controllers;
@@ -33,6 +38,45 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// /me endpoint for user state management
+    /// </summary>
+    /// <returns>AuthResponse with JWT token, refresh token, and user details if successful</returns>
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("me")]
+    public IActionResult CurrentUser() 
+    {
+        try
+        {
+            //Extract the claims
+            // We check the .NET mapped type first, then fallback to the raw JWT name
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+            var email = User.FindFirstValue(ClaimTypes.Email) 
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
+
+            var displayName = User.FindFirstValue("name") // 'Name' often maps directly to lowercase 'name'
+                        ?? User.FindFirstValue(JwtRegisteredClaimNames.Name);
+
+            // Your custom claim
+            // var displayImage = User.FindFirstValue("display_image");
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            return Ok (new {
+                userId = userId,
+                email = email,
+                displayName = displayName,
+                role = role
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized("Invalid Token.");
+        }
+    }
+    
+    /// <summary>
     /// Authenticates a user with username and password
     /// </summary>
     /// <param name="request">Login request containing username and password</param>
@@ -44,9 +88,17 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = await _getUseCase.ExecuteLoginAsync(request);
+            var user = await _getUseCase.ExecuteLoginAsync(request);     
 
-            return Ok(user);
+            // Set cookies securely from the backend
+            SetTokenCookies(user.accessToken, user.refreshToken);
+
+            return Ok(new {
+                userId = user.userId,
+                email = user.email,
+                name = user.displayName,
+                role = user.role
+            });
         }
         catch (UnauthorizedAccessException)
         {
@@ -84,12 +136,27 @@ public class AuthController : ControllerBase
     /// <response code="200">Token successfully refreshed</response>
     /// <response code="401">Invalid or expired refresh token</response>
     [HttpPost("refresh-token")]
-    public async Task<IActionResult> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<IActionResult> RefreshTokenAsync()
     {
         try
         {
-            var result = await _updateUseCase.ExecuteRefreshTokenAsync(request);
-            return Ok(result);
+            var currentRefreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrWhiteSpace(currentRefreshToken))
+            {
+                return Unauthorized("Refresh token cookie is missing.");
+            }
+
+            try {
+                var tokens = await _updateUseCase.ExecuteRefreshTokenAsync(currentRefreshToken);
+
+                // Set cookies securely from the backend
+                SetTokenCookies(tokens.accessToken, tokens.refreshToken);
+                return Ok(new {message = "Token refreshed succesfully"});
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("Invalid or expired refresh token.");
+            }
         }
         catch (UnauthorizedAccessException)
         {
@@ -132,20 +199,76 @@ public class AuthController : ControllerBase
         
         // Get the email claim from Google's response
         var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
-        var name = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
+        var displayName = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
 
         if (string.IsNullOrWhiteSpace(email)) {
             return BadRequest("Failed to extract email.");
         }
 
-        if (string.IsNullOrWhiteSpace(name)) {
+        if (string.IsNullOrWhiteSpace(displayName)) {
             return BadRequest("Failed to extract name in email.");
         }
 
         // Get or create user and generate tokens
-        var tokens = await _getUseCase.ExecuteGoogleSigninAsync(email, name);
+        var user = await _getUseCase.ExecuteGoogleSigninAsync(email, displayName);
+
+        // Delete the temporary Google cookie so it doesn't clutter the browser
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        // Set cookies securely from the backend
+        SetTokenCookies(user.accessToken, user.refreshToken);
         
         // Redirect to frontend with tokens in query string
-        return Redirect($"http://skwela.local:3000/authentication/callback?token={tokens.accessToken}&refresh={tokens.refreshToken}");
+        return Redirect($"http://localhost:3000/authentication/callback?userId={user.userId}&email={email}&displayName={displayName}&role={user.role}");
+    }
+
+    /// <summary>
+    /// Takes access token and refresh token as params
+    /// Set the cookies from the backend securely
+    /// </summary>
+    /// <param name="accessToken">The access token of the logged user</param>
+    /// <param name="refreshToken">The refresh token of the logged user</param>
+    private void SetTokenCookies(string accessToken, string refreshToken)
+    {
+        // Access Token Cookie (short-lived)
+        var accessOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddMinutes(60)
+        };
+        Response.Cookies.Append("accessToken", accessToken, accessOptions);
+
+        var refreshOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddDays(7)
+        };
+        Response.Cookies.Append("refreshToken", refreshToken, refreshOptions);
+    }
+
+    /// <summary>
+    /// Logout http endpoint
+    /// Clear cookies to remove current user's access token and refresh token
+    /// </summary>
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost("logout")]
+    public IActionResult logout() 
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax
+        };
+
+        // This tells the browser to instantly destroy these cookies
+        Response.Cookies.Delete("accessToken", cookieOptions);
+        Response.Cookies.Delete("refreshToken", cookieOptions);
+
+        return Ok(new { Message = "Logged out successfully" });
     }
 }

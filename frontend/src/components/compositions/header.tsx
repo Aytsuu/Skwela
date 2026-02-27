@@ -43,7 +43,7 @@ interface DropdownItem {
 }
 
 export const Header = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const currentPath = pathname.split("/").pop();
 
@@ -121,7 +121,7 @@ export const Header = () => {
                 </Avatar>
                 <div className="text-start flex flex-col truncate">
                   <span className="font-medium">
-                    {user?.displayName ?? user?.username ?? "User"}
+                    {user?.displayName ?? "User"}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {user?.email}
@@ -132,8 +132,8 @@ export const Header = () => {
             <DropdownMenuContent className="w-40" align="start">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                {dropdown_items.map((item: DropdownItem) => (
-                  <DropdownMenuItem className="cursor-pointer" onClick={item.action}>
+                {dropdown_items.map((item: DropdownItem, index: number) => (
+                  <DropdownMenuItem key={index} className="cursor-pointer" onClick={item.action}>
                     <item.icon /> {item.title}
                   </DropdownMenuItem>
                 ))}
@@ -152,7 +152,7 @@ export const Header = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setIsOpenLogoutDialog(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant={"destructive"} >Yes, Logout</AlertDialogAction>
+            <AlertDialogAction variant={"destructive"} onClick={logout}>Yes, Logout</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

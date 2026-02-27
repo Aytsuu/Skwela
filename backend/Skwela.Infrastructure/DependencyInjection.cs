@@ -56,8 +56,16 @@ public static class DependencyInjection
         // Configure Authentication Schemes (Cookie + JWT + Google OAuth)
         services.AddAuthentication(options =>
             {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+                // Default API Behavior: Read JWTs, and return 401s if missing
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+
+                // Google OAuth Exception: When Google succeeds, temporarily save the identity to a Cookie
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
+                // options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                // options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             })
             // Configure JWT Bearer Token validation
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -74,6 +82,19 @@ public static class DependencyInjection
                         Encoding.UTF8.GetBytes(config["Jwt:Key"]!)
                     )
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Cookies["accessToken"];
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            context.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             })
             // Configure Cookie Authentication (for temporary auth state)
             .AddCookie()
@@ -86,6 +107,12 @@ public static class DependencyInjection
                 options.SaveTokens = true;
                 options.CorrelationCookie.SameSite = SameSiteMode.Lax;
                 options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Events.OnRedirectToAuthorizationEndpoint = context =>
+                {
+                    // This intercepts the redirect to Google and forces the account chooser screen
+                    context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+                    return Task.CompletedTask;
+                };
             });
 
         // Register Repository and External Services

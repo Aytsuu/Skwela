@@ -1,50 +1,33 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import { AuthService } from './auth.service';
 
-// Api instance
+// API instance with credentials enabled
 export const api = axios.create({
-  baseURL: "https://skwela.paoloaraneta.dev"
-})
+  baseURL: process.env.NODE_ENV == "development" ? "http://localhost:8080" : process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true // This tells the browser to send the HttpOnly cookies
+});
 
-// Authorization interceptor
-api.interceptors.request.use((config) => {
-  const token = Cookies.get('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config
-})
-
-// Refresh token interceptor
+// Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    if (originalRequest.url.includes('api/auth/me')) {
+      return Promise.reject(error);
+    }
+    
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // Call refresh token
-        const oldAccessToken = Cookies.get('accessToken');
-        const oldRefreshToken = Cookies.get('refreshToken');
-
-        const response = await axios.post(`${api.defaults.baseURL}/api/auth/refresh-token`, {
-          accessToken: oldAccessToken,
-          refreshToken: oldRefreshToken
+        await axios.post(`${api.defaults.baseURL}/api/auth/refresh-token`, {}, {
+          withCredentials: true
         });
-
-        const { accessToken, refreshToken } = response.data
-
-        const sixtyMinutes = new Date(new Date().getTime() + 60 * 60 * 1000);
-        Cookies.set('accessToken', accessToken, { expires: sixtyMinutes, path: '/' });
-        Cookies.set('refreshToken', refreshToken, { path: '/' });
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
 
       } catch (refreshError) {
-        Cookies.remove('accessToken');
-        Cookies.remove('refreshToken');
+        AuthService.logout();
         window.location.href = '/authentication/login';
         return Promise.reject(refreshError);
       }
@@ -52,4 +35,4 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
-)
+);
