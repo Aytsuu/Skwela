@@ -1,10 +1,10 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "../../../components/context/AuthContext";
-import { useDeleteClassroom, useGetClassroomData } from "../../../hooks/useClassroom";
-import { Button } from "../../../components/ui/button";
-import { useUpdateStatus } from "../../../hooks/useEnrollment";
+import { useAuth } from "../../../../components/context/AuthContext";
+import { useDeleteClassroom, useGetClassroomData } from "../../../../hooks/useClassroom";
+import { Button } from "../../../../components/ui/button";
+import { useUpdateStatus } from "../../../../hooks/useEnrollment";
 import { useEffect, useState } from "react";
 import Protected from "@/components/route/protected";
 
