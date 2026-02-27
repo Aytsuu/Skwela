@@ -1,7 +1,6 @@
 using Skwela.Application.Interfaces;
 using Skwela.Domain.Enums;
 using Skwela.Domain.Entities;
-using System;
 
 namespace Skwela.Application.UseCases.Auth;
 
@@ -65,9 +64,10 @@ public class GetUserUseCase
     /// Executes the Google OAuth signin process
     /// Creates a new user account if they don't exist, otherwise retrieves existing user
     /// </summary>
+    /// <param name="name">User's email address from Google OAuth</param>
     /// <param name="email">User's email address from Google OAuth</param>
     /// <returns>AuthResponse with JWT token, refresh token, and user details</returns>
-    public async Task<AuthResponse> ExecuteGoogleSigninAsync(string email)
+    public async Task<AuthResponse> ExecuteGoogleSigninAsync(string email, string name)
     {
         // Attempt to find existing user by email
         var user = await _authRepository.GoogleSigninAsync(email);
@@ -75,11 +75,8 @@ public class GetUserUseCase
         // If user doesn't exist, create a new account
         if (user == null)
         {
-            user = await _authRepository.SignupAsync(User.Build(email, null, null));
+            user = await _authRepository.SignupAsync(User.Build(name, email, null, null));
         }
-
-        // Log the refresh token for debugging (consider removing in production)
-        Console.WriteLine(user.refreshToken);
         
         // Generate authentication response with tokens
         return new AuthResponse(

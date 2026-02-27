@@ -33,7 +33,7 @@ public class CreateUserUseCase
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.password);
         
         // Create a new user with domain validation
-        var user = User.Build(null, request.username, hashedPassword);
+        var user = User.Build(request.name, null, request.username, hashedPassword);
         
         // Persist the user to the database
         return await _authRepository.SignupAsync(user);
