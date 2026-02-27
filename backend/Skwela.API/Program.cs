@@ -54,7 +54,7 @@ builder.Services.AddCors(options =>
     {
         // Allow requests from specified frontend origins
         policy.WithOrigins(
-            "https://api.paoloaraneta.dev",
+            "https://skwela.paoloaraneta.dev",
             "http://skwela.local:3000",
             "http://127.0.0.1:3000",
             "http://localhost:3000"
@@ -80,18 +80,31 @@ app.UseCors("AllowFrontend"); // Apply CORS policy
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var context = services.GetRequiredService<AppDbContext>();
+
+    for (int retries = 0; retries < 10; retries++)
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        // This checks for any pending migrations and applies them to whatever 
-        // database is defined in your connection string.
-        context.Database.Migrate();
-        Console.WriteLine("Database migration applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        try
+        {
+            // This checks for any pending migrations and applies them to whatever 
+            // database is defined in your connection string.
+            context.Database.Migrate();
+            logger.LogInformation("Database migration applied successfully.");
+            break;
+        }
+        catch (Exception)
+        {
+            if (retries == 9)
+            {
+                logger.LogError("Could not connect to the database.");
+            }   
+            else
+            {
+                logger.LogError("Connecting...");
+                await Task.Delay(3000);
+            }
+        }
     }
 }
 

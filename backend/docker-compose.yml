@@ -9,22 +9,22 @@ services:
     volumes:
       - redis_data:/data
 
-  skwela-api:
-    build:
-      dockerfile: Dockerfile
-    container_name: skwela-api
-    depends_on:
-      - skwela-db
-    networks:
-      - skwela-net
-    env_file:
-    - ./.env
+  # skwela-api:
+  #   build:
+  #     dockerfile: Dockerfile
+  #   container_name: skwela-api
+  #   depends_on:
+  #     - skwela-db
+  #   networks:
+  #     - skwela-net
+  #   env_file:
+  #   - ./.env
 
   skwela-db:
     image: postgres:17-alpine
     container_name: skwela-db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

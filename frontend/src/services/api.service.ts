@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Api instance
 export const api = axios.create({
-  baseURL: "https://api.paoloaraneta.dev"
+  baseURL: "https://skwela.paoloaraneta.dev"
 })
 
 // Authorization interceptor
