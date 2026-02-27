@@ -3,6 +3,7 @@ using Skwela.Application.UseCases.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using System;
 
 namespace Skwela.API.Controllers;
 
@@ -131,13 +132,18 @@ public class AuthController : ControllerBase
         
         // Get the email claim from Google's response
         var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+        var name = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
 
         if (string.IsNullOrWhiteSpace(email)) {
             return BadRequest("Failed to extract email.");
         }
 
+        if (string.IsNullOrWhiteSpace(name)) {
+            return BadRequest("Failed to extract name in email.");
+        }
+
         // Get or create user and generate tokens
-        var tokens = await _getUseCase.ExecuteGoogleSigninAsync(email);
+        var tokens = await _getUseCase.ExecuteGoogleSigninAsync(email, name);
         
         // Redirect to frontend with tokens in query string
         return Redirect($"http://skwela.local:3000/authentication/callback?token={tokens.accessToken}&refresh={tokens.refreshToken}");

@@ -1,1 +1,1 @@
-public record LoginRequest(string username, string password);
+public record LoginRequest(string name, string username, string password);

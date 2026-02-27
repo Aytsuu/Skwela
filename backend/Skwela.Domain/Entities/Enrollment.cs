@@ -10,36 +10,14 @@ namespace Skwela.Domain.Entities;
 /// </summary>
 public class Enrollment
 {
-    /// <summary>
-    /// Foreign key: ID of the classroom the student is enrolled in
-    /// </summary>
     public Guid class_id { get; set; }
-    
-    /// <summary>
-    /// Foreign key: ID of the student enrolled
-    /// </summary>
     public Guid user_id { get; set; }
-    
-    /// <summary>
-    /// Timestamp when the student was enrolled
-    /// </summary>
     public DateTime enrolled_at { get; set; }
-    
-    /// <summary>
-    /// Status of the enrollment: "active" or "inactive"
-    /// Allows students to pause/resume access without fully unenrolling
-    /// </summary>
     public string enrolled_status { get; set; } = "active";
-
-    /// <summary>
-    /// Navigation property: The classroom the student is enrolled in
-    /// </summary>
+    
     [ForeignKey("class_id")]
     public Classroom? classroom { get; set; }
     
-    /// <summary>
-    /// Navigation property: The student who is enrolled
-    /// </summary>
     [ForeignKey("user_id")]
     public User? user { get; set; }
 
