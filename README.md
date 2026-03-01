@@ -104,7 +104,7 @@ The frontend uses a feature-based organization:
 - .NET 8.0+ SDK
 - Node.js 18+ & npm
 - SQL Server
-- Docker & Docker Compose (optional)
+- Docker & Docker Compose
 
 ### Backend Setup
 
