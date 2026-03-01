@@ -23,6 +23,7 @@ public class AuthController : ControllerBase
     private readonly CreateUserUseCase _createUseCase;
     private readonly GetUserUseCase _getUseCase;
     private readonly UpdateUserUseCase _updateUseCase;
+    private readonly VerifyUserUseCase _verifyUseCase;
 
     /// <summary>
     /// Initializes the AuthController with required use cases
@@ -30,45 +31,43 @@ public class AuthController : ControllerBase
     /// <param name="createUseCase">Use case for user creation/signup</param>
     /// <param name="getUseCase">Use case for user login and retrieval</param>
     /// <param name="updateUseCase">Use case for user updates and token refresh</param>
-    public AuthController(CreateUserUseCase createUseCase, GetUserUseCase getUseCase, UpdateUserUseCase updateUseCase)
+    public AuthController(CreateUserUseCase createUseCase, GetUserUseCase getUseCase, UpdateUserUseCase updateUseCase, VerifyUserUseCase verifyUseCase)
     {
         _createUseCase = createUseCase;
         _getUseCase = getUseCase;
         _updateUseCase = updateUseCase;
+        _verifyUseCase = verifyUseCase;
     }
 
     /// <summary>
     /// /me endpoint for user state management
     /// </summary>
     /// <returns>AuthResponse with JWT token, refresh token, and user details if successful</returns>
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    /// <response code="200">Fresh user data</response>
+    /// <response code="401">Acceess token expired/invalid</response>
+    [Authorize]
     [HttpGet("me")]
-    public IActionResult CurrentUser() 
+    public async Task<IActionResult> CurrentUser() 
     {
         try
         {
             //Extract the claims
             // We check the .NET mapped type first, then fallback to the raw JWT name
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
             var email = User.FindFirstValue(ClaimTypes.Email) 
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
+                ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
 
-            var displayName = User.FindFirstValue("name") // 'Name' often maps directly to lowercase 'name'
-                        ?? User.FindFirstValue(JwtRegisteredClaimNames.Name);
-
-            // Your custom claim
-            // var displayImage = User.FindFirstValue("display_image");
-
-            var role = User.FindFirstValue(ClaimTypes.Role);
+            var freshData = await _getUseCase.ExecuteGetCurrentUser(email!);
 
             return Ok (new {
-                userId = userId,
-                email = email,
-                displayName = displayName,
-                role = role
+                userId = freshData.user_id,
+                email = freshData.email,
+                displayName = freshData.display_name,
+                role = freshData.role
             });
+        }
+        catch (EmailNotVerifiedException)
+        {
+            return Forbid();
         }
         catch (UnauthorizedAccessException)
         {
@@ -100,6 +99,11 @@ public class AuthController : ControllerBase
                 role = user.role
             });
         }
+        catch (EmailNotVerifiedException)
+        {
+
+            return Forbid();
+        }
         catch (UnauthorizedAccessException)
         {
             return Unauthorized("Invalid credentials.");
@@ -118,8 +122,15 @@ public class AuthController : ControllerBase
     {   
         try
         {
-            var userId = await _createUseCase.ExecuteAsync(request);
-            return Ok(new { userId });
+            var userId = await _createUseCase.ExecuteSignupAsync(request);
+            return Ok();
+        }
+        catch (EmailAlreadyExistException eaEx) 
+        {
+            return BadRequest(new {
+                field = "email",
+                message = eaEx.Message
+            });
         }
         catch (InvalidDataException)
         {
@@ -127,6 +138,61 @@ public class AuthController : ControllerBase
         }
 
     }
+
+    /// <summary>
+    /// Generate new 6-digit otp
+    /// Store to redis cache with 5-minutes TTL (Time-To-Live) and send to user email
+    /// </summary>
+    /// <param name="email">Email of the user</param>
+    /// <response code="200">OTP code resend successfully</response>
+    /// <response code="400">Failed to resend OTP</response>
+    [HttpPost("resend-otp")]
+    public async Task<IActionResult> ResendOtp(ResendOtpRequest request) 
+    {
+        try 
+        {
+            await _verifyUseCase.ExecuteSendOtp(request.email);
+            return Ok();
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest("Failed to resend otp");
+        }
+    }
+
+    /// <summary>
+    /// Generate new 6-digit otp
+    /// Store to redis cache with 5-minutes TTL (Time-To-Live) and send to user email
+    /// </summary>
+    /// <param name="email">Email of the user</param>
+    /// <param name="otpCode">OTP code input from user</param>
+    /// <response code="200">Email has been verified</response>
+    /// <response code="400">Invalid OTP</response>
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail(VerifyEmailRequest request) 
+    {
+        try 
+        {
+            var user = await _verifyUseCase.ExecuteVerifyEmail(request.email, request.otpCode);
+
+            // Set cookies securely from the backend
+            SetTokenCookies(user.accessToken, user.refreshToken);
+
+            return Ok(new {
+                userId = user.userId,
+                email = user.email,
+                name = user.displayName,
+                role = user.role
+            });
+        }
+        catch (InvalidDataException idEx)
+        {
+            return BadRequest(new {
+                message = idEx.Message
+            });
+        }
+    }
+
 
     /// <summary>
     /// Refreshes an expired JWT token using a valid refresh token
@@ -223,6 +289,28 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Logout http endpoint
+    /// Clear cookies to remove current user's access token and refresh token
+    /// </summary>
+    [Authorize]
+    [HttpPost("logout")]
+    public IActionResult logout() 
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax
+        };
+
+        // This tells the browser to instantly destroy these cookies
+        Response.Cookies.Delete("accessToken", cookieOptions);
+        Response.Cookies.Delete("refreshToken", cookieOptions);
+
+        return Ok(new { Message = "Logged out successfully" });
+    }
+
+    /// <summary>
     /// Takes access token and refresh token as params
     /// Set the cookies from the backend securely
     /// </summary>
@@ -250,25 +338,4 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("refreshToken", refreshToken, refreshOptions);
     }
 
-    /// <summary>
-    /// Logout http endpoint
-    /// Clear cookies to remove current user's access token and refresh token
-    /// </summary>
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpPost("logout")]
-    public IActionResult logout() 
-    {
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax
-        };
-
-        // This tells the browser to instantly destroy these cookies
-        Response.Cookies.Delete("accessToken", cookieOptions);
-        Response.Cookies.Delete("refreshToken", cookieOptions);
-
-        return Ok(new { Message = "Logged out successfully" });
-    }
 }

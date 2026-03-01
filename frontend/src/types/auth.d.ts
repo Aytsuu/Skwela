@@ -1,12 +1,10 @@
-export interface LoginRequest {
-  username: string;
-  password: string;
+export interface VerifyEmail {
+  email: string;
+  otpCode: string;
 }
 
-export interface SignupRequest extends LoginRequest { }
-
 export interface UserProfile {
-  userId: string
+  userId: string;
   email: string;
   displayName: string;
   displayImage?: string;

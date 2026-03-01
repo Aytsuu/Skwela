@@ -17,6 +17,7 @@ public class User
     public string display_name { get; set; } = default!;
     public string display_image { get; set; } = "https://res.cloudinary.com/dzcmadjl1/image/upload/v1694868283/default_profile_image_oqxv6r.png";
     public UserRole role { get; set; }
+    public bool is_email_verified { get; set; } = false;
     public DateTime user_created_at { get; set; } = DateTime.UtcNow;
     public string? refreshToken { get; set; }
     public DateTime refreshTokenExpiryTime { get; set; }
@@ -31,7 +32,7 @@ public class User
     /// <param name="password">Hashed password</param>
     /// <returns>A new User instance with default values</returns>
     /// <exception cref="DomainException">Thrown if neither email nor username is provided</exception>
-    public static User Build(string name, string? email, string? username, string? password)
+    public static User Build(string name, string? email, string? username, string? password, bool? is_email_verified)
     {
         // Business rule: User must have either email or username
         if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(username))
@@ -47,7 +48,8 @@ public class User
             password = password ?? "",
             display_name = name,
             display_image = "https://res.cloudinary.com/dzcmadjl1/image/upload/v1694868283/default_profile_image_oqxv6r.png",
-            role = UserRole.student // Default role is student
+            role = UserRole.student, // Default role is student
+            is_email_verified = is_email_verified ?? false
         };
     }
 

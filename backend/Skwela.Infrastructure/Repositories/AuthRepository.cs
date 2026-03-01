@@ -3,7 +3,10 @@ using Skwela.Infrastructure.Data;
 using Skwela.Application.Interfaces;
 using Skwela.Infrastructure.Services;
 using Skwela.Domain.Entities;
+using Skwela.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
+using System.Security.Cryptography;
 
 namespace Skwela.Infrastructure.Repositories;
 
@@ -17,6 +20,7 @@ public class AuthRepository : IAuthRepository
     private readonly AppDbContext _context;
     private readonly AuthService _authService;
     private readonly ILogger<AuthRepository> _logger;
+    private readonly IDatabase _redisDB;
 
     /// <summary>
     /// Initializes the AuthRepository with database context, auth service, and logger
@@ -24,11 +28,38 @@ public class AuthRepository : IAuthRepository
     /// <param name="context">Entity Framework database context</param>
     /// <param name="authService">Service for token generation</param>
     /// <param name="logger">Logger for debugging and error tracking</param>
-    public AuthRepository(AppDbContext context, AuthService authService, ILogger<AuthRepository> logger)
+    public AuthRepository(AppDbContext context, AuthService authService, ILogger<AuthRepository> logger, IDatabase redisDB)
     {
         _context = context;
         _authService = authService;
         _logger = logger;
+        _redisDB = redisDB;
+    }
+
+    /// <summary>
+    /// Fetch current user data from db
+    /// </summary>
+    /// <param name="userId">userId of current user</param>
+    /// <returns>The complete data of current user</returns>
+    public async Task<User> CurrentUserAsync(string email) 
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.email == email);
+
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found");
+        }
+
+        // Return requested data
+        return user;
+    }
+
+    /// <summary>
+    /// Update user data
+    /// </summary>
+    public async Task UpdateUserAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 
     /// <summary>
@@ -43,6 +74,14 @@ public class AuthRepository : IAuthRepository
         if (!string.IsNullOrWhiteSpace(user.email)) {
             user.refreshToken = _authService.GenerateRefreshToken();
             user.refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        }
+
+        var emailAlreadyExist = await _context.Users
+            .AnyAsync(u => u.email == user.email);
+
+        if (emailAlreadyExist)
+        {
+            throw new EmailAlreadyExistException("Email already exist");
         }
 
         // Add user to database
@@ -60,10 +99,10 @@ public class AuthRepository : IAuthRepository
     /// <param name="password">The password to verify</param>
     /// <returns>The authenticated User entity with updated tokens</returns>
     /// <exception cref="UnauthorizedAccessException">Thrown if user not found or password is invalid</exception>
-    public async Task<User> LoginAsync(string username, string password)
+    public async Task<User> LoginAsync(string email, string password)
     {
         // Find user by username
-        var user = _context.Users.FirstOrDefault(u => u.username == username);
+        var user = await CurrentUserAsync(email);
 
         // Validate user exists and password is correct
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.password))
@@ -104,7 +143,6 @@ public class AuthRepository : IAuthRepository
         user.refreshToken = newRefreshToken;
         user.refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync();
-
         return user;
     }
     
@@ -117,9 +155,7 @@ public class AuthRepository : IAuthRepository
     public async Task<User> GoogleSigninAsync(string email)
     {
         // Find user by email (case-sensitive query)
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.email == email);
-
+        var user = await CurrentUserAsync(email);
         return user!;
     }
 }

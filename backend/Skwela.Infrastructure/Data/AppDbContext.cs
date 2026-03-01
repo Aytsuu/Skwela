@@ -18,33 +18,14 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) 
         : base(options) { }
 
-    /// <summary>
-    /// DbSet for User entities
-    /// Represents the "Users" table in the database
-    /// </summary>
     public DbSet<User> Users => Set<User>();
-    
-    /// <summary>
-    /// DbSet for Classroom entities
-    /// Represents the "Classrooms" table in the database
-    /// </summary>
     public DbSet<Classroom> Classrooms => Set<Classroom>();
-    
-    /// <summary>
-    /// DbSet for Enrollment entities
-    /// Represents the "Enrollments" table in the database
-    /// </summary>
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     
     // Future entities - uncomment when ready to implement
     //public DbSet<Assignment> Assignments => Set<Assignment>();
     //public DbSet<Submission> Submissions => Set<Submission>();
 
-    /// <summary>
-    /// Configures database schema and entity relationships
-    /// Sets up primary keys, constraints, indexes, and foreign key relationships
-    /// </summary>
-    /// <param name="modelBuilder">Model builder for configuring entities</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -53,12 +34,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.user_id); // Primary key
+
             entity.Property(e => e.username);
-            entity.Property(e => e.email);
+            entity.HasIndex(e => e.username).IsUnique();
+            entity.Property(e => e.email).IsRequired().HasMaxLength(255);
+            entity.HasIndex(e => e.email).IsUnique();
             entity.Property(e => e.password).IsRequired();
             entity.Property(e => e.display_name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.display_image);
             entity.Property(e => e.role).IsRequired(); // Teacher or Student enum
+            entity.Property(e => e.is_email_verified);
             entity.Property(e => e.refreshToken);
             entity.Property(e => e.refreshTokenExpiryTime);
             entity.Property(e => e.user_created_at).IsRequired();

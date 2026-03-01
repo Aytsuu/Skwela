@@ -4,6 +4,7 @@ import "./globals.css";
 import Provider from "./queryClientProvider";
 import { AuthProvider } from "../components/context/AuthContext";
 import { QueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/wrapper/theme-provider";
 
 const queryClient = new QueryClient();
 
@@ -32,9 +33,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Provider>
-          <AuthProvider>{children}</AuthProvider>
-        </Provider>
+        <ThemeProvider attribute={"class"} defaultTheme="dark">
+          <Provider>
+            <AuthProvider>{children}</AuthProvider>
+          </Provider>
+        </ThemeProvider>
       </body>
     </html>
   );

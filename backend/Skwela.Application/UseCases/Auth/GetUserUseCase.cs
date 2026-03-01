@@ -1,6 +1,7 @@
 using Skwela.Application.Interfaces;
 using Skwela.Domain.Enums;
 using Skwela.Domain.Entities;
+using Skwela.Domain.Exceptions;
 
 namespace Skwela.Application.UseCases.Auth;
 
@@ -14,6 +15,7 @@ public class GetUserUseCase
     private readonly IAuthService _authService;
     private readonly IClassroomRepository _classroomRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly VerifyUserUseCase _verifyUseCase;
 
     /// <summary>
     /// Initializes the GetUserUseCase with required repositories and services
@@ -26,13 +28,15 @@ public class GetUserUseCase
         IAuthRepository authRepository, 
         IAuthService authService,
         IClassroomRepository classroomRepository,
-        IEnrollmentRepository enrollmentRepository
+        IEnrollmentRepository enrollmentRepository,
+        VerifyUserUseCase verifyUseCase
     )
     {
         _authRepository = authRepository;
         _authService = authService;
         _classroomRepository = classroomRepository;
         _enrollmentRepository = enrollmentRepository;
+        _verifyUseCase = verifyUseCase;
     }
 
     /// <summary>
@@ -45,7 +49,13 @@ public class GetUserUseCase
     public async Task<AuthResponse> ExecuteLoginAsync(LoginRequest request)
     {
         // Validate credentials and retrieve user from database
-        var user = await _authRepository.LoginAsync(request.username, request.password);
+        var user = await _authRepository.LoginAsync(request.email, request.password);
+
+        if (!user.is_email_verified)
+        {
+            await _verifyUseCase.ExecuteSendOtp(request.email);
+            throw new EmailNotVerifiedException("Email verification is required");
+        }
 
         // Generate authentication response with tokens
         return new AuthResponse(
@@ -75,7 +85,7 @@ public class GetUserUseCase
         // If user doesn't exist, create a new account
         if (user == null)
         {
-            user = await _authRepository.SignupAsync(User.Build(name, email, null, null));
+            user = await _authRepository.SignupAsync(User.Build(name, email, null, null, true));
         }
         
         // Generate authentication response with tokens
@@ -89,5 +99,23 @@ public class GetUserUseCase
             user.display_image,
             user.role
         );
+    }
+
+    /// <summary>
+    /// Executes the fetch process
+    /// </summary>
+    /// <param name="userId">userId of current user</param>
+    /// <returns>The complete data of current user</returns>
+    public async Task<User> ExecuteGetCurrentUser(string email)
+    {
+        var user = await _authRepository.CurrentUserAsync(email);
+
+        if (!user.is_email_verified)
+        {
+            throw new EmailNotVerifiedException("Email verification is required");
+        }
+
+        // Return data
+        return user;
     }
 }

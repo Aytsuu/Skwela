@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<CreateEnrollmentUseCase>();
         services.AddScoped<GetEnrollmentUseCase>();
         services.AddScoped<UpdateEnrollmentUseCase>();
+        services.AddScoped<VerifyUserUseCase>();
 
         return services;
     }

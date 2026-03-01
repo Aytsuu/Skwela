@@ -80,7 +80,7 @@ export const Header = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center py-2 px-5 bg-white shadow-sm">
+      <div className="flex justify-between items-center py-2 px-5 bg-custom-primary-contrast border-b border-white/10">
         <div className="flex items-center gap-4">
           {nav_items.map((item: NavItem) => (
             <Link key={item.path} href={item.path} className="relative">
@@ -119,7 +119,7 @@ export const Header = () => {
                   />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
-                <div className="text-start flex flex-col truncate">
+                <div className="text-start flex flex-col truncate leading-4">
                   <span className="font-medium">
                     {user?.displayName ?? "User"}
                   </span>
