@@ -1,5 +1,5 @@
 import { loginSchema, signupSchema } from '@/schemas/auth.schema';
-import { UserProfile, VerifyEmail } from '../types/auth';
+import { ResetPassword, UserProfile, VerifyEmail } from '../types/auth';
 import { api } from './api.service';
 import z from 'zod';
 
@@ -34,7 +34,7 @@ export const AuthService = {
   },
   verifyEmail: async (data: VerifyEmail) => {
     try {
-      const res = await api.post("api/auth/verify-email", data);
+      const res = await api.post<UserProfile>("api/auth/verify-email", data);
       return res.data;
     } catch (err) {
       throw err;
@@ -43,6 +43,22 @@ export const AuthService = {
   resendOtp: async (email: string) => {
     try {
       const res = await api.post("api/auth/resend-otp", { email });
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  },
+  validateEmail: async (email: string) => {
+    try {
+      const res = await api.get(`api/auth/${email}/validate`);
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  },
+  resetPassword: async (data: ResetPassword) => {
+    try {
+      const res = await api.patch(`api/auth/reset-password`, data);
       return res.data;
     } catch (err) {
       throw err;

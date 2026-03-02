@@ -27,9 +27,8 @@ public class UpdateUserUseCase
     /// Executes the token refresh operation
     /// Validates the refresh token and generates a new JWT token
     /// </summary>
-    /// <param name="request">RefreshTokenRequest containing current access token and refresh token</param>
+    /// <param name="refreshToken">User refresh token</param>
     /// <returns>RefreshTokenResponse with new JWT token and refresh token</returns>
-    /// <exception cref="UnauthorizedAccessException">Thrown if refresh token is invalid or expired</exception>
     public async Task<RefreshTokenResponse> ExecuteRefreshTokenAsync(string refreshToken)
     {
         // Validate refresh token and retrieve user
@@ -40,5 +39,54 @@ public class UpdateUserUseCase
             _authService.GenerateJwtToken(user),
             user.refreshToken ?? string.Empty
         );
+    }
+
+    /// <summary>
+    /// Recover account via reset password
+    /// </summary>
+    /// <param name="request">ResetPasswordRequest contains email and new password</param>
+    public async Task ExecuteResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var user = await _authRepository.CurrentUserAsync(null, request.email);
+
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.password);
+        user.password = hashedPassword;
+        
+        await _authRepository.UpdateUserAsync();
+    }
+
+    /// <summary>
+    /// Updates user data based on non null values
+    /// </summary>
+    /// <param name="request">UpdateUserRequest contains nullable user attributes</param>
+    public async Task ExecuteUpdateUserAsync(UpdateUserRequest request)
+    {
+        var user = await _authRepository.CurrentUserAsync(request.userId, null);
+
+        // Update only non null attributes
+        if (request.email != null)
+        {
+            user.email = request.email;
+        }
+        if (request.password != null)
+        {
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.password);
+            user.password = hashedPassword;
+        }
+        if (request.displayName != null)
+        {
+            user.display_name = request.displayName;
+        }
+        if (request.displayImage != null)
+        {
+            user.display_image = request.displayImage;
+        }
+        if (request.role != null)
+        {
+            user.role = request.role.Value;
+        }
+
+        // Save changes
+        await _authRepository.UpdateUserAsync();
     }
 }

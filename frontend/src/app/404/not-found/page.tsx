@@ -1,4 +1,4 @@
-export default function NotFound() {
+export default () => {
   return (
     <div>
       PAGE NOT FOUND 404

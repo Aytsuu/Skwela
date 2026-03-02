@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AuthService } from "../services/auth.service";
 import { useAuth } from "../components/context/AuthContext";
 
@@ -31,5 +31,11 @@ export const useVerifyEmail = () => {
 export const useResendOtp = () => {
   return useMutation({
     mutationFn: AuthService.resendOtp
+  })
+}
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: AuthService.resetPassword
   })
 }

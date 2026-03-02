@@ -8,7 +8,7 @@ import { useUpdateStatus } from "../../../../hooks/useEnrollment";
 import { useEffect, useState } from "react";
 import Protected from "@/components/route/protected";
 
-export default function ClassroomPage() {
+export default () => {
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();

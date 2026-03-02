@@ -45,7 +45,7 @@ public class VerifyUserUseCase
         }
         
         // Get user data
-        var user = await _authRepository.CurrentUserAsync(email);
+        var user = await _authRepository.CurrentUserAsync(null, email);
 
         // Update user is_email_verified to true
         user.is_email_verified = true;
@@ -67,18 +67,28 @@ public class VerifyUserUseCase
     }
 
     /// <summary>
+    /// Validate if email is registered
+    /// </summary>
+    /// <param name="email">Email of the user</param>
+    public async Task ExecuteValidateEmail(string email)
+    {
+        await _authRepository.CurrentUserAsync(null, email);
+        await ExecuteSendOtp(email);
+    }
+
+    /// <summary>
     /// Send otp to user email
     /// </summary>
     /// <param name="email">Email of the user</param>
     public async Task ExecuteSendOtp(string email)
-        {
-            // Using RandomNuberGenerator to generate six digits OTP code
-            var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+    {
+        // Using RandomNuberGenerator to generate six digits OTP code
+        var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
 
-            // Store to Redis with a 5-minutes TTL (Time-To-Live)
-            await _redisCache.SaveOtpAsync(email, otpCode, TimeSpan.FromMinutes(5));
+        // Store to Redis with a 5-minutes TTL (Time-To-Live)
+        await _redisCache.SaveOtpAsync(email, otpCode, TimeSpan.FromMinutes(5));
 
-            // Send OTP to email via SmtpServer
-            await _emailService.SendOtpEmailAsync(email, otpCode);
-        }
+        // Send OTP to email via SmtpServer
+        await _emailService.SendOtpEmailAsync(email, otpCode);
+    }
 }

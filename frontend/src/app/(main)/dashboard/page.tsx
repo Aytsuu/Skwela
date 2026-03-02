@@ -1,6 +1,6 @@
 "use client";
 
-export default function Dashboard() {
+export default () => {
   return (
     <div>
       

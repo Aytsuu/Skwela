@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/context/AuthContext";
 
-export default function AuthCallback() {
+export default () => {
   const { storeUser } = useAuth();
   const router = useRouter();
 

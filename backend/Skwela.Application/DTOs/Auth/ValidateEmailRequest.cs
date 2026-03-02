@@ -1,0 +1,1 @@
+public record ValidateEmailRequest(string email);

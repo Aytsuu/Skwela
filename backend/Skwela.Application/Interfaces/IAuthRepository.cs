@@ -8,6 +8,6 @@ public interface IAuthRepository
     Task<User> LoginAsync(string email, string password);
     Task<User> RefreshTokenAsync(string refreshToken);
     Task<User> GoogleSigninAsync(string email);
-    Task<User> CurrentUserAsync(string email);
+    Task<User> CurrentUserAsync(Guid? userId, string? email);
     Task UpdateUserAsync();
 }

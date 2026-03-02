@@ -87,9 +87,7 @@ public class EnrollmentController : ControllerBase
     /// <param name="userId">The ID of the student</param>
     /// <returns>The updated enrollment record with new status</returns>
     /// <response code="200">Enrollment status successfully updated</response>
-    /// <response code="404">Enrollment record not found</response>
     /// <response code="400">Invalid request parameters or update failed</response>
-    /// <response code="401">User is not authenticated</response>
     [Authorize]
     [HttpPatch("update/status/{classId}/{userId}")]
     public async Task<IActionResult> UpdateEnrollmentStatus(Guid classId, Guid userId)

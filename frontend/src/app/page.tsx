@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
 import Link from "next/link";
 
-export default function Home() {
+export default function RootPage() {
   return (
       <div className="flex justify-between a items-center mx-auto max-w-5xl py-6">
         <span className="font-bold">Skwela</span>

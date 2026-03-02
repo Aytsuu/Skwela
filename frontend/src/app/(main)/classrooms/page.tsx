@@ -18,7 +18,7 @@ import { enrollmentSchema } from "../../../schemas/enrollment.schema";
 import { useCreateEnrollment, useGetEnrolledClasses } from "../../../hooks/useEnrollment";
 import Link from "next/link";
 
-export default function Classrooms() {
+export default () => {
   const { user } = useAuth();
   console.log(user)
   const createClassroomForm = useForm<z.infer<typeof classroomSchema>>({

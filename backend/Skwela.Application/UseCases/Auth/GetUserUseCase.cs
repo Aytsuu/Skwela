@@ -104,11 +104,11 @@ public class GetUserUseCase
     /// <summary>
     /// Executes the fetch process
     /// </summary>
-    /// <param name="userId">userId of current user</param>
+    /// <param name="email">Email of current user</param>
     /// <returns>The complete data of current user</returns>
     public async Task<User> ExecuteGetCurrentUser(string email)
     {
-        var user = await _authRepository.CurrentUserAsync(email);
+        var user = await _authRepository.CurrentUserAsync(null, email);
 
         if (!user.is_email_verified)
         {

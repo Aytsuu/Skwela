@@ -1,6 +1,12 @@
 export interface VerifyEmail {
   email: string;
   otpCode: string;
+  type: string;
+}
+
+export interface ResetPassword {
+  email: string;
+  password: string;
 }
 
 export interface UserProfile {

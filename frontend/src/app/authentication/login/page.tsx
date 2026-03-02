@@ -14,7 +14,7 @@ import { Input } from "../../../components/ui/input";
 import { loginSchema } from "../../../schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { Button } from "../../../components/ui/button";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useLogin } from "../../../hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
@@ -30,8 +30,10 @@ import {
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie';
 
-export default function LoginPage() {
+export default () => {
+  // Hooks & States
   const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -43,6 +45,15 @@ export default function LoginPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutateAsync: login } = useLogin();
+
+  // watch fields
+  const email = form.watch('email');
+  const password = form.watch('password');
+
+  // Effects
+  React.useEffect(() => {
+    form.clearErrors(["email", "password"]);
+  }, [email, password])
 
   // Handlers
   const handleLogin = async () => {
@@ -57,9 +68,25 @@ export default function LoginPage() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
+        const errorData = err.response?.data;
+        console.log(errorData)
         if (status === 403) {
-          localStorage.setItem("otp_email", form.getValues().email);
+          // Store the email temporarily to cookie for OTP verification
+          const inFiveMinutes = new Date(new Date().getTime() + 5 * 60 * 1000);
+          Cookies.set("otp_email", form.getValues().email, { expires: inFiveMinutes, path: "/" })
           router.push("verify?type=login");
+        } else if (status === 404) {
+          form.setError("email", {
+            type: "server",
+            message: errorData
+          })
+        } else {
+          form.setError("password", {
+            type: "server",
+            message: errorData
+          })
+
+          form.setError("email", {})
         }
       }
     } finally {
@@ -77,7 +104,7 @@ export default function LoginPage() {
           }}
           // className="rounded-sm flex flex-col gap-6 items-center w-110 border border-white/10 p-10 shadow-lg bg-custom-primary-contrast"
         >
-          <Card className="mx-auto w-sm bg-custom-primary-contrast">
+          <Card className="w-sm bg-custom-primary-contrast">
             <CardHeader>
               <CardTitle>Login to your account</CardTitle>
               <CardDescription>
@@ -118,7 +145,9 @@ export default function LoginPage() {
                   )}
                 />
 
-                <span className="text-right cursor-pointer text-sm text-white/70 hover:underline">
+                <span className="text-right cursor-pointer text-sm text-white/70 hover:underline"
+                  onClick={() => router.push("login/identify")}
+                >
                   Forgot Password?
                 </span>
               </div>

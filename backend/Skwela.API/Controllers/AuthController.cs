@@ -65,6 +65,10 @@ public class AuthController : ControllerBase
                 role = freshData.role
             });
         }
+        catch (KeyNotFoundException knfEx)
+        {
+            return NotFound(knfEx.Message);
+        }
         catch (EmailNotVerifiedException)
         {
             return Forbid();
@@ -82,6 +86,7 @@ public class AuthController : ControllerBase
     /// <returns>AuthResponse with JWT token, refresh token, and user details if successful</returns>
     /// <response code="200">User successfully authenticated</response>
     /// <response code="401">Invalid credentials provided</response>
+    /// /// <response code="404">User not found</response>
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
@@ -101,12 +106,15 @@ public class AuthController : ControllerBase
         }
         catch (EmailNotVerifiedException)
         {
-
             return Forbid();
         }
         catch (UnauthorizedAccessException)
         {
-            return Unauthorized("Invalid credentials.");
+            return Unauthorized("Invalid credentials");
+        }
+        catch (KeyNotFoundException knfEx)
+        {
+            return NotFound(knfEx.Message);
         }
     }
 
@@ -176,20 +184,96 @@ public class AuthController : ControllerBase
             var user = await _verifyUseCase.ExecuteVerifyEmail(request.email, request.otpCode);
 
             // Set cookies securely from the backend
-            SetTokenCookies(user.accessToken, user.refreshToken);
+            if (request.type == "forgot_password")
+            {
+                return Ok( new {
+                    message = "Validated successfully"
+                });
+            } 
+            else
+            {
+                SetTokenCookies(user.accessToken, user.refreshToken);
 
-            return Ok(new {
-                userId = user.userId,
-                email = user.email,
-                name = user.displayName,
-                role = user.role
-            });
+                return Ok(new {
+                    userId = user.userId,
+                    email = user.email,
+                    name = user.displayName,
+                    role = user.role
+                });
+            }
         }
         catch (InvalidDataException idEx)
         {
             return BadRequest(new {
                 message = idEx.Message
             });
+        }
+    }
+
+    /// <summary>
+    /// Reset password to recover account
+    /// </summary>
+    /// <param name="request">The user's email and new password</param>
+    /// <response code="200">Successful password reset</response>
+    /// <response code="400">Failed to reset password</response>
+    /// <response code="404">User not found</response>
+    [HttpPatch("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    {
+        try 
+        {
+            await _updateUseCase.ExecuteResetPasswordAsync(request);
+            return Ok();
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest(new { message = "Failed to reset password"});
+        }
+        catch (KeyNotFoundException knfEx)
+        {
+            return NotFound(knfEx.Message);
+        }
+    }
+
+    /// <summary>
+    /// Update user based on non-null values
+    /// </summary>
+    /// <param name="request">The updated data of the user</param>
+    /// <response code="200">User data updated successfully</response>
+    /// <response code="400">Failed to update user data</response>
+    [Authorize]
+    [HttpPatch]
+    public async Task<IActionResult> UpdateUserData(UpdateUserRequest request)
+    {
+        try 
+        {
+            await _updateUseCase.ExecuteUpdateUserAsync(request);
+            return Ok();
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest(new { message = "Failed to update user data"});
+        }
+    }
+
+    /// <summary>
+    /// Check if email is registered in the system
+    /// </summary>
+    /// <param name="request">The request contains the email</param>
+    /// <returns>RefreshTokenResponse with new JWT token and refresh token</returns>
+    /// <response code="200">Email is registered</response>
+    /// <response code="404">Email not found</response>
+    [HttpGet("{email}/validate")]
+    public async Task<IActionResult> ValidateEmail(string email)
+    {
+        try
+        {
+            await _verifyUseCase.ExecuteValidateEmail(email);
+            return Ok();
+        }
+        catch (KeyNotFoundException knfEx)
+        {
+            return NotFound(knfEx.Message);
         }
     }
 

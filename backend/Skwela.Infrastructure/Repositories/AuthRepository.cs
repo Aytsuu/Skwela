@@ -39,15 +39,25 @@ public class AuthRepository : IAuthRepository
     /// <summary>
     /// Fetch current user data from db
     /// </summary>
-    /// <param name="userId">userId of current user</param>
+    /// <param name="userId">User ID of current user</param>
+    /// <param name="email">Email of current user</param>
     /// <returns>The complete data of current user</returns>
-    public async Task<User> CurrentUserAsync(string email) 
+    public async Task<User> CurrentUserAsync(Guid? userId, string? email) 
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.email == email);
+        User? user;
 
-        if (user == null)
+        if (userId != null) // If retrieve via userId
         {
-            throw new KeyNotFoundException("User not found");
+            user = await _context.Users.FirstOrDefaultAsync(u => u.user_id == userId);
+        }
+        else  // If retrieve via email
+        {
+            user = await _context.Users.FirstOrDefaultAsync(u => u.email == email);
+        }
+
+        if (user == null) // Throw not found exception if user is null
+        {
+            throw new KeyNotFoundException("This user is not registered");
         }
 
         // Return requested data
@@ -102,7 +112,7 @@ public class AuthRepository : IAuthRepository
     public async Task<User> LoginAsync(string email, string password)
     {
         // Find user by username
-        var user = await CurrentUserAsync(email);
+        var user = await CurrentUserAsync(null, email);
 
         // Validate user exists and password is correct
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.password))
@@ -155,7 +165,7 @@ public class AuthRepository : IAuthRepository
     public async Task<User> GoogleSigninAsync(string email)
     {
         // Find user by email (case-sensitive query)
-        var user = await CurrentUserAsync(email);
+        var user = await CurrentUserAsync(null, email);
         return user!;
     }
 }

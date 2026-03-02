@@ -24,8 +24,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
+import Cookies from 'js-cookie';
 
-export default function SignupPage() {
+export default () => {
   const router = useRouter();
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -49,7 +50,11 @@ export default function SignupPage() {
     try {
       setIsSubmitting(true);
       await signup(form.getValues());
-      localStorage.setItem("otp_email", form.getValues().email)
+      
+      // Store the email temporarily to cookie for OTP verification
+      const inFiveMinutes = new Date(new Date().getTime() + 5 * 60 * 1000);
+      Cookies.set("otp_email", form.getValues().email, { expires: inFiveMinutes, path: "/" })
+
       router.push("verify?type=signup");
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -74,7 +79,7 @@ export default function SignupPage() {
             handleSignup();
           }}
         >
-          <Card className="mx-auto w-sm bg-custom-primary-contrast">
+          <Card className="w-sm bg-custom-primary-contrast">
             <CardHeader>
               <CardTitle>Create an account</CardTitle>
               <CardDescription>Enter your information below to create your account</CardDescription>

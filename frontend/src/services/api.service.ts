@@ -13,7 +13,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (originalRequest.url.includes('api/auth/me')) {
+    if (
+      originalRequest.url.includes('api/auth/me') ||
+      originalRequest.url.includes('api/auth/login')
+    ) {
       return Promise.reject(error);
     }
     
