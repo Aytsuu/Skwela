@@ -95,6 +95,10 @@ public class GetUserUseCase
         {
             user = await _authRepository.SignupAsync(User.Build(name, email, null, null, true));
         }
+
+        // Store to redis cache for faster retrieval
+        var cacheKey = $"auth:user:{user.email}";
+        await _redisCache.SaveRedisCacheAsync(cacheKey, user, TimeSpan.FromHours(1));
         
         // Generate authentication response with tokens
         return new AuthResponse(

@@ -15,14 +15,14 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { signupSchema } from "../../../schemas/auth.schema";
 import { useSignup } from "../../../hooks/useAuth";
-import { useState } from "react";
+import React from "react";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { api } from "@/services/api.service";
 import { FcGoogle } from "react-icons/fc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeClosed, Loader2 } from "lucide-react";
 import axios from "axios";
 import Cookies from 'js-cookie';
 
@@ -38,7 +38,13 @@ export default () => {
     },
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState<boolean>(false);
+  const Icon1 = showPassword ? EyeClosed : Eye;
+  const Icon2 = showConfirmPassword ? EyeClosed : Eye;
+
+  // Queries
   const { mutateAsync: signup } = useSignup();
 
   // Handlers
@@ -121,11 +127,19 @@ export default () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            className="pr-10"
+                            {...field}
+                          />
+                          <Icon1
+                            size={18} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80"
+                            onClick={() => setShowPassword(!showPassword)}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -139,11 +153,19 @@ export default () => {
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Re-enter your password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Re-enter your password"
+                            className="pr-10"
+                            {...field}
+                          />
+                          <Icon2
+                            size={18} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

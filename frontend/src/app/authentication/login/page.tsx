@@ -14,7 +14,7 @@ import { Input } from "../../../components/ui/input";
 import { loginSchema } from "../../../schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { Button } from "../../../components/ui/button";
-import React, { useState } from "react";
+import React from "react";
 import { useLogin } from "../../../hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
@@ -27,7 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeClosed, Loader2, LucideIcon } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
@@ -43,7 +43,11 @@ export default () => {
     },
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const Icon: LucideIcon = showPassword ? EyeClosed : Eye;
+
+  // Queries
   const { mutateAsync: login } = useLogin();
 
   // watch fields
@@ -133,11 +137,19 @@ export default () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            className="pr-10"
+                            {...field}
+                          />
+                          <Icon 
+                            size={18} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80"
+                            onClick={() => setShowPassword(!showPassword)}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
