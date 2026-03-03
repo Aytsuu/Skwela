@@ -11,16 +11,18 @@ public class UpdateUserUseCase
 {
     private readonly IAuthRepository _authRepository;
     private readonly IAuthService _authService;
+    private readonly IRedisCacheService _redisCache;
 
     /// <summary>
     /// Initializes the UpdateUserUseCase with authentication repository and service
     /// </summary>
     /// <param name="authRepository">Repository for user authentication operations</param>
     /// <param name="authService">Service for generating JWT tokens</param>
-    public UpdateUserUseCase(IAuthRepository authRepository, IAuthService authService)
+    public UpdateUserUseCase(IAuthRepository authRepository, IAuthService authService, IRedisCacheService redisCache)
     {
         _authRepository = authRepository;
         _authService = authService;
+        _redisCache = redisCache;
     }
 
     /// <summary>
@@ -51,6 +53,10 @@ public class UpdateUserUseCase
 
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.password);
         user.password = hashedPassword;
+
+        // Remove user data from redis cache 
+        var cacheKey = $"auth:user:{user.email}";
+        await _redisCache.DeleteRedisCacheAsync(cacheKey);
         
         await _authRepository.UpdateUserAsync();
     }
@@ -85,6 +91,10 @@ public class UpdateUserUseCase
         {
             user.role = request.role.Value;
         }
+
+        // Remove user data from redis cache 
+        var cacheKey = $"auth:user:{user.email}";
+        await _redisCache.DeleteRedisCacheAsync(cacheKey);
 
         // Save changes
         await _authRepository.UpdateUserAsync();
