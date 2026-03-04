@@ -61,7 +61,7 @@ public class EnrollmentRepository : IEnrollmentRepository
     {
         // Query active enrollments for the student with classroom details
         return await _context.Enrollments
-            .Where(e => e.user_id == userId && e.enrolled_status == "active")
+            .Where(e => e.user_id == userId)
             .Include(e => e.classroom)
             .ToListAsync();
     }
@@ -86,7 +86,7 @@ public class EnrollmentRepository : IEnrollmentRepository
         }
 
         // Toggle enrollment status between active and inactive
-        enrollment.enrolled_status = enrollment.enrolled_status == "active" ? "inactive" : "active";
+        enrollment.enroll_is_approved = !enrollment.enroll_is_approved;
         await _context.SaveChangesAsync();
 
         return enrollment;

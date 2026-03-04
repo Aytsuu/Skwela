@@ -10,11 +10,14 @@ namespace eSECAI.Domain.Entities;
 /// </summary>
 public class Classroom
 {
-    public required Guid class_id { get; set; }
-    public string class_name { get; set; } = string.Empty;
-    public string class_description { get; set; } = string.Empty;
-    public required DateTime class_created_at { get; set; } = DateTime.UtcNow;
-    public required Guid user_id { get; set; }
+    public Guid class_id { get; set; }
+    public string class_name { get; set; } = default!;
+    public string class_description { get; set; } = default!;
+    public string class_image { get; set; } = default!;
+    public bool class_is_archived { get; set; } = false;
+    public DateTime class_created_at { get; set; }
+    public DateTime class_updated_at { get; set; }
+    public Guid user_id { get; set; }
 
     [ForeignKey("user_id")]
     public User? user { get; set; }
@@ -28,19 +31,24 @@ public class Classroom
     /// <param name=\"description\">Description of the classroom</param>
     /// <returns>A new Classroom instance with generated ID and timestamp</returns>
     /// <exception cref=\"DomainException\">Thrown if userId is empty (invalid teacher)</exception>
-    public static Classroom Build(Guid userId, string? name, string? description)
+    public static Classroom Build(
+        Guid userId, 
+        string? name, 
+        string? description, 
+        string? image
+    )
     {
         // Business rule: A classroom must have a teacher
         if (userId == Guid.Empty)
-            throw new DomainException("A classroom must have a teacher.");
+            throw new DomainException("A classroom must have creator.");
 
-        // Create and return the classroom
+        // Create and return the classroom 
         return new Classroom
         {
             class_id = Guid.NewGuid(),
             class_name = name ?? "New Classroom", // Default name if not provided
             class_description = description ?? string.Empty,
-            class_created_at = DateTime.UtcNow,
+            class_image = image ?? string.Empty,
             user_id = userId
         };
     }

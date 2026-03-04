@@ -1,6 +1,5 @@
 using eSECAI.Domain.Entities;
 using eSECAI.Application.Interfaces;
-using eSECAI.Domain.Enums;
 
 namespace eSECAI.Application.UseCases.Classrooms;
 
@@ -33,20 +32,16 @@ public class GetClassroomUseCase
 
     /// <summary>
     /// Retrieves detailed information about a specific classroom
-    /// Performs authorization checks based on user role:
-    /// - Teachers can only access their own classrooms
-    /// - Students can only access classrooms they are enrolled in
     /// </summary>
     /// <param name="classId">The ID of the classroom to retrieve</param>
     /// <param name="userId">The ID of the user requesting access</param>
-    /// <param name="role">The role of the user (teacher or student)</param>
     /// <returns>ClassroomResponse with classroom details and teacher information</returns>
     /// <exception cref="KeyNotFoundException">Thrown if classroom does not exist</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown if user is not authorized to access the classroom</exception>
-    public async Task<ClassroomResponse> ExecuteGetClassroomDataAsync(Guid classId, Guid userId, UserRole role)
+    public async Task<ClassroomResponse> ExecuteGetClassroomDataAsync(Guid classId, Guid userId)
     {
         // Retrieve classroom with authorization checks
-        var classData = await _repository.GetClassroomDataAsync(classId, userId, role);
+        var classData = await _repository.GetClassroomDataAsync(classId, userId);
 
         if (classData == null)
         {
@@ -59,7 +54,7 @@ public class GetClassroomUseCase
             classData.class_name,
             classData.class_description,
             classData.class_created_at,
-            classData.user?.display_name ?? "Unknown Teacher",
+            classData.user?.display_name ?? "Unknown Creator",
             classData.user?.display_image ?? string.Empty
         );
     }

@@ -30,7 +30,7 @@ public class CreateClassroomUseCase
     public async Task<Classroom> ExecuteAsync(CreateClassroomDto dto)
     {
         // Create classroom with domain validation
-        var classroom = Classroom.Build(dto.userId, dto.name, dto.description);
+        var classroom = Classroom.Build(dto.userId, dto.name, dto.description, null);
         
         // Persist to database
         return await _repository.AddAsync(classroom);

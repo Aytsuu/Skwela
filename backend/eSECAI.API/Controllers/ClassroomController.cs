@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using eSECAI.Application.UseCases.Classrooms;
-using eSECAI.Domain.Enums;
 
 namespace eSECAI.API.Controllers;
 
@@ -96,12 +95,12 @@ public class ClassroomsController : ControllerBase
     /// <response code="400">Invalid request parameters</response>
     /// <response code="401">User is not authenticated</response>
     [Authorize]
-    [HttpGet("get/{classId}/{userId}/{role}")]
-    public async Task<IActionResult> GetClassroomData(Guid classId, Guid userId, UserRole role)
+    [HttpGet("get/{classId}/{userId}")]
+    public async Task<IActionResult> GetClassroomData(Guid classId, Guid userId)
     {
         try
         {
-            var classroom = await _getUseCase.ExecuteGetClassroomDataAsync(classId, userId, role);
+            var classroom = await _getUseCase.ExecuteGetClassroomDataAsync(classId, userId);
             return Ok(classroom);
         }
         catch (KeyNotFoundException knfEx)

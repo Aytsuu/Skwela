@@ -61,11 +61,9 @@ public class AuthService : IAuthService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.user_id.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.username),
             new Claim(JwtRegisteredClaimNames.Email, user.email),
             new Claim(JwtRegisteredClaimNames.Name, user.display_name),
             new Claim("display_image", user.display_image),
-            new Claim(ClaimTypes.Role, user.role.ToString())
         };
 
         // Create signing key from configuration

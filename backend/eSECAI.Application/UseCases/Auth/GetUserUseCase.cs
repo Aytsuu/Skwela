@@ -1,5 +1,4 @@
 using eSECAI.Application.Interfaces;
-using eSECAI.Domain.Enums;
 using eSECAI.Domain.Entities;
 using eSECAI.Domain.Exceptions;
 using System.Text.Json;
@@ -70,11 +69,9 @@ public class GetUserUseCase
             _authService.GenerateJwtToken(user),
             user.refreshToken ?? string.Empty,
             user.user_id,
-            user.username ?? "",
             user.email ?? "",
             user.display_name,
-            user.display_image,
-            user.role
+            user.display_image
         );
     }
 
@@ -93,7 +90,7 @@ public class GetUserUseCase
         // If user doesn't exist, create a new account
         if (user == null)
         {
-            user = await _authRepository.SignupAsync(User.Build(name, email, null, null, true));
+            user = await _authRepository.SignupAsync(User.Build(name, email, null, true));
         }
 
         // Store to redis cache for faster retrieval
@@ -105,11 +102,9 @@ public class GetUserUseCase
             _authService.GenerateJwtToken(user),
             user.refreshToken ?? "",
             user.user_id,
-            user.username ?? "",
             user.email ?? "",
             user.display_name,
-            user.display_image,
-            user.role
+            user.display_image
         );
     }
 

@@ -61,11 +61,9 @@ public class VerifyUserUseCase
         _authService.GenerateJwtToken(user),
         user.refreshToken ?? "",
         user.user_id,
-        user.username ?? "",
         user.email ?? "",
         user.display_name,
-        user.display_image,
-        user.role
+        user.display_image
         );
     }
 

@@ -10,10 +10,11 @@ namespace eSECAI.Domain.Entities;
 /// </summary>
 public class Enrollment
 {
+    public Guid enroll_id { get; set; }
+    public bool enroll_is_approved { get; set; } = false;
+    public DateTime enroll_created_at { get; set; }
     public Guid class_id { get; set; }
     public Guid user_id { get; set; }
-    public DateTime enrolled_at { get; set; }
-    public string enrolled_status { get; set; } = "active";
     
     [ForeignKey("class_id")]
     public Classroom? classroom { get; set; }
@@ -27,7 +28,7 @@ public class Enrollment
     /// </summary>
     /// <param name="classId">The ID of the classroom</param>
     /// <param name="userId">The ID of the student</param>
-    /// <returns>A new Enrollment instance with generated timestamp</returns>
+    /// <returns>A new Enrollment instance</returns>
     /// <exception cref="DomainException">Thrown if classId or userId is empty (invalid)</exception>
     public static Enrollment Build(Guid classId, Guid userId)
     {
@@ -42,10 +43,9 @@ public class Enrollment
         // Create and return the enrollment
         return new Enrollment
         {
+            enroll_id = Guid.NewGuid(),
             class_id = classId,
-            user_id = userId,
-            enrolled_at = DateTime.UtcNow,
-            enrolled_status = "active" // New enrollments are active by default
+            user_id = userId
         };
     }
 }

@@ -87,10 +87,6 @@ public class UpdateUserUseCase
         {
             user.display_image = request.displayImage;
         }
-        if (request.role != null)
-        {
-            user.role = request.role.Value;
-        }
 
         // Remove user data from redis cache 
         var cacheKey = $"auth:user:{user.email}";

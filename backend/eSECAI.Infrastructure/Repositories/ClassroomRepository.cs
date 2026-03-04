@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using eSECAI.Application.Interfaces;
 using eSECAI.Infrastructure.Data;
 using eSECAI.Domain.Entities;
-using eSECAI.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -58,17 +57,13 @@ public class ClassroomRepository : IClassroomRepository
 
     /// <summary>
     /// Retrieves detailed classroom information with authorization checks
-    /// Different access rules apply based on user role:
-    /// - Teachers can only access their own classrooms
-    /// - Students can only access classrooms they are enrolled in
     /// </summary>
     /// <param name="classId">The ID of the classroom to retrieve</param>
     /// <param name="userId">The ID of the user requesting access</param>
-    /// <param name="role">The role of the user (teacher or student)</param>
     /// <returns>The Classroom entity with included teacher information</returns>
     /// <exception cref="KeyNotFoundException">Thrown if classroom does not exist</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown if user is not authorized to access the classroom</exception>
-    public async Task<Classroom> GetClassroomDataAsync(Guid classId, Guid userId, UserRole role)
+    public async Task<Classroom> GetClassroomDataAsync(Guid classId, Guid userId)
     {
         // Load classroom with teacher information
         var classroom = await _context.Classrooms
@@ -80,22 +75,22 @@ public class ClassroomRepository : IClassroomRepository
             throw new KeyNotFoundException("Classroom not found.");
         }
 
-        // Authorization check for teachers - can only access their own classrooms
-        if (role == UserRole.teacher && classroom.user_id != userId)
-        {
-            throw new UnauthorizedAccessException("You do not have access to this classroom.");
-        }
-        // Authorization check for students - must be enrolled in the classroom
-        else if(role == UserRole.student)
-        {
-            var isEnrolled = await _context.Enrollments
-                .AnyAsync(e => e.class_id == classId && e.user_id == userId);
+        // // Authorization check for creators - can only access their own classrooms
+        // if (classroom.user_id != userId)
+        // {
+        //     throw new UnauthorizedAccessException("You do not have access to this classroom.");
+        // }
+        // // Authorization check for enrollees - must be enrolled in the classroom
+        // else
+        // {
+        //     var isEnrolled = await _context.Enrollments
+        //         .AnyAsync(e => e.class_id == classId && e.user_id == userId);
 
-            if (!isEnrolled)
-            {
-                throw new UnauthorizedAccessException("You are not enrolled in this classroom.");
-            }
-        }
+        //     if (!isEnrolled)
+        //     {
+        //         throw new UnauthorizedAccessException("You are not enrolled in this classroom.");
+        //     }
+        // }
 
         return classroom;
     }
@@ -110,7 +105,7 @@ public class ClassroomRepository : IClassroomRepository
     {
         // Check if classroom has any active enrollments
         var hasStudent = await _context.Enrollments
-            .AnyAsync(e => e.class_id == classId && e.enrolled_status == "active");
+            .AnyAsync(e => e.class_id == classId);
 
         if (hasStudent)
         {

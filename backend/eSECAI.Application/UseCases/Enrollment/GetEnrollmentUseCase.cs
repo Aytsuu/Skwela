@@ -38,7 +38,7 @@ public class GetEnrollmentUseCase
             e.class_id,
             e.classroom?.class_name ?? "Unknown Classroom",
             e.classroom?.class_description ?? string.Empty,
-            e.enrolled_at
+            e.enroll_created_at
         ));
     }
 }

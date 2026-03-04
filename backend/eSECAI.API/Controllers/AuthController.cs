@@ -62,8 +62,7 @@ public class AuthController : ControllerBase
             return Ok (new {
                 userId = freshData.user_id,
                 email = freshData.email,
-                displayName = freshData.display_name,
-                role = freshData.role
+                displayName = freshData.display_name
             });
         }
         catch (KeyNotFoundException knfEx)
@@ -102,8 +101,7 @@ public class AuthController : ControllerBase
             return Ok(new {
                 userId = user.userId,
                 email = user.email,
-                name = user.displayName,
-                role = user.role
+                name = user.displayName
             });
         }
         catch (EmailNotVerifiedException)
@@ -201,8 +199,7 @@ public class AuthController : ControllerBase
                 return Ok(new {
                     userId = user.userId,
                     email = user.email,
-                    name = user.displayName,
-                    role = user.role
+                    name = user.displayName
                 });
             }
         }
@@ -374,7 +371,7 @@ public class AuthController : ControllerBase
         SetTokenCookies(user.accessToken, user.refreshToken);
         
         // Redirect to frontend with tokens in query string
-        return Redirect($"http://localhost:3000/authentication/callback?userId={user.userId}&email={email}&displayName={displayName}&role={user.role}");
+        return Redirect($"http://localhost:3000/authentication/callback?userId={user.userId}&email={email}&displayName={displayName}");
     }
 
     /// <summary>
