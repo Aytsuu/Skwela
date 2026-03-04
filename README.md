@@ -1,4 +1,4 @@
-# 🎓 eSECAI
+# 🎓 eSECAI - Electronic Student Engagement Checker Powered by AI
 
 <div align="center">
 
