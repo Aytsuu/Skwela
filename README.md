@@ -1,4 +1,4 @@
-# 🎓 Skwela
+# 🎓 eSECAI
 
 <div align="center">
 
@@ -8,13 +8,13 @@
 [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-Proprietary-red)](LICENSE)
 
-A comprehensive full-stack application for classroom management and educational administration. Built with ASP.NET Core on the backend and Next.js on the frontend.
+A comprehensive full-stack application for student engagement and educational administration. Built with ASP.NET Core on the backend and Next.js on the frontend.
 
 </div>
 
 ## Overview
 
-Skwela is a modern, scalable platform designed to streamline classroom operations, student enrollment, and assignment management. The application follows clean architecture principles with a well-structured separation of concerns.
+eSECAI (Electronic Student Engagement Checker — powered by AI) is an intelligent platform built to streamline how educators and administrators track, assess, and respond to student participation across academic activities. Leveraging artificial intelligence, eSECAI provides real-time insights into student engagement patterns, activity completion, and overall academic involvement — enabling schools to make data-driven decisions that support student success. Designed with simplicity and efficiency in mind, eSECAI bridges the gap between traditional manual monitoring and modern AI-assisted evaluation.
 
 ### 🛠️ Tech Stack
 
