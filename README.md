@@ -1,8 +1,10 @@
 > This is a personal project
 
-# 🎓 eSECAI - Electronic Student Engagement Checker Powered by AI
+## 🎓 eSECAI - Electronic Student Engagement Checker Powered by AI
 
 <div align="center">
+<br/>
+<br/>
 
 [![.NET](https://img.shields.io/badge/.NET-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
