@@ -1,6 +1,6 @@
 > This is a personal project
 
-## 🎓 eSECAI - Electronic Student Engagement Checker Powered by AI
+## 🎓 eSECAI - Electronic Student Engagement Checker Powered with AI
 
 <div align="center">
 <br/>
