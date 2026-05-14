@@ -5,24 +5,9 @@ import {
   BookOpen,
   Loader2,
   LucideIcon,
+  ImagePlus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Dialog, DialogFooter, DialogHeader } from "@/components/ui/dialog";
-import {
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { classroomSchema } from "@/schemas/classroom.schema";
@@ -38,13 +23,137 @@ import Link from "next/link";
 import {
   Card,
 } from "@/components/ui/card";
-import ClassroomForm from "./ClassroomForm";
 import { queryError } from "@/helpers/errorDisplay";
 import { slugFormat } from "@/helpers/urlFormatter";
-import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 // ─── Card Components ──────────────────────────────────────────────────────────
+function CreateClassroomCard() {
+  const { user } = useAuth();
+  const { mutateAsync: createClassroom } = useCreateClassroom();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const form = useForm<z.infer<typeof classroomSchema>>({
+    resolver: zodResolver(classroomSchema),
+    defaultValues: { name: "", description: "", bannerFile: "" },
+  });
+
+  const bannerFile = form.watch("bannerFile");
+  const name = form.watch("name");
+  const description = form.watch("description");
+
+  const bannerPreview = React.useMemo(() => {
+    if (!bannerFile) return null;
+    if (typeof bannerFile === "string") return bannerFile;
+    return URL.createObjectURL(bannerFile as File);
+  }, [bannerFile]);
+
+  const handleCreate = async () => {
+    const isValid = await form.trigger(["name", "description"]);
+    if (!isValid) return;
+
+    try {
+      setIsSubmitting(true);
+      const values = form.getValues();
+      const formData = new FormData();
+      formData.append("userId", user?.userId as string);
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      if (values.bannerFile) formData.append("bannerFile", values.bannerFile);
+
+      await createClassroom(formData);
+      form.reset({ name: "", description: "", bannerFile: "" });
+      toast.success("Classroom created successfully!");
+    } catch (err: any) {
+      queryError(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const hasAnyInput = !!(name || description || bannerFile);
+
+  return (
+    <Card className="h-full overflow-hidden border-2 border-dashed border-muted-foreground/20 bg-muted/5 transition-all duration-300 hover:border-indigo-500/50 hover:bg-indigo-50/10">
+      <div className="p-6 flex flex-col items-center text-center space-y-4">
+        <div
+          className="relative w-28 h-28 rounded-full overflow-hidden shadow-soft flex items-center justify-center bg-muted/30 cursor-pointer group/banner transition-all duration-300"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {bannerPreview ? (
+            <img
+              src={bannerPreview}
+              className="h-full w-full object-cover"
+              alt="Banner preview"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <ImagePlus className="text-muted-foreground group-hover/banner:text-indigo-500 transition-colors" size={28} />
+              <span className="text-[10px] font-medium text-muted-foreground">Banner</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/banner:opacity-100 transition-opacity flex items-center justify-center">
+            <p className="text-white text-[10px] font-bold">CHANGE</p>
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) form.setValue("bannerFile", file, { shouldDirty: true });
+            }}
+          />
+        </div>
+
+        <div className="space-y-2 w-full">
+          <input
+            {...form.register("name")}
+            placeholder="New Class Name"
+            className="w-full bg-transparent text-center text-base font-bold tracking-tight focus:outline-none placeholder:text-muted-foreground/40 border-none shadow-none focus-visible:ring-0"
+          />
+          <textarea
+            {...form.register("description")}
+            placeholder="Class description (optional)"
+            rows={2}
+            className="w-full bg-transparent text-center text-xs text-muted-foreground font-medium leading-relaxed resize-none focus:outline-none placeholder:text-muted-foreground/30 border-none shadow-none focus-visible:ring-0"
+          />
+        </div>
+
+        <AnimatePresence>
+          {hasAnyInput && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              className="w-full overflow-hidden"
+            >
+              <Button
+                size="sm"
+                onClick={handleCreate}
+                disabled={isSubmitting || !name}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all h-9 gap-2 shadow-sm hover:shadow-md"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <>
+                    <Plus size={14} />
+                    CREATE CLASS
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </Card>
+  );
+}
+
 function OwnedClassroomCard({ classroom }: { classroom: ClassroomData }) {
   const classNameUrl = slugFormat(classroom.className);
 
@@ -105,20 +214,7 @@ function EmptyState({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const ClassroomsContent = () => {
-  const { user } = useAuth();
-
-  const createClassForm = useForm<z.infer<typeof classroomSchema>>({
-    resolver: zodResolver(classroomSchema),
-    defaultValues: { name: "", description: "", bannerFile: "" },
-  });
-
   const [isMounted, setIsMounted] = React.useState<boolean>(false);
-  const [isOpenCreateClassroom, setIsOpenCreateClassroom] =
-    React.useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const [showDiscardDialog, setShowDiscardDialog] = React.useState<boolean>(false);
-
-  const { mutateAsync: createClassroom } = useCreateClassroom();
   const {
     data: createdClassrooms,
     isLoading: isLoadingClassrooms,
@@ -129,53 +225,7 @@ const ClassroomsContent = () => {
     setIsMounted(true);
   }, []);
 
-  const handleCreateClassroom = async () => {
-    if (!(await createClassForm.trigger(['description', 'name']))) return;
-    let isSuccess = false;
-    try {
-      setIsSubmitting(true);
-      const values = createClassForm.getValues();
-      const formData = new FormData();
-      formData.append("userId", user?.userId as string);
-      formData.append("name", values.name);
-      formData.append("description", values.description);
-      if (values.bannerFile) formData.append("bannerFile", values.bannerFile);
-      await createClassroom(formData);
-      isSuccess = true;
-    } catch (err: any) {
-      queryError(err);
-    } finally {
-      setIsSubmitting(false);
-      if (isSuccess) {
-        setIsOpenCreateClassroom(false);
-        createClassForm.reset();
-      }
-    }
-  };
-
-  const handleCreateDialogOpenChange = (nextOpen: boolean) => {
-    if (isSubmitting) return;
-
-    if (!nextOpen && createClassForm.formState.isDirty) {
-      setShowDiscardDialog(true);
-      return;
-    }
-
-    setIsOpenCreateClassroom(nextOpen);
-    if (!nextOpen) {
-      createClassForm.reset();
-    }
-  };
-
-  const handleDiscardChanges = () => {
-    createClassForm.reset();
-    setShowDiscardDialog(false);
-    setIsOpenCreateClassroom(false);
-  };
-
   if (!isMounted) return null;
-
-  const ownedCount = createdClassrooms?.length ?? 0;
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
@@ -185,12 +235,6 @@ const ClassroomsContent = () => {
             <h1 className="text-3xl font-extrabold tracking-tight">Classrooms</h1>
             <p className="text-sm font-medium text-muted-foreground mt-1">Manage and monitor your active classes.</p>
           </div>
-          <Button
-            onClick={() => setIsOpenCreateClassroom(true)}
-          >
-            <Plus size={16} />
-            New Classroom
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -219,96 +263,28 @@ const ClassroomsContent = () => {
               title="Could not load classrooms"
               description="Please refresh and try again. If the problem continues, check your network connection."
             />
-          ) : ownedCount === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title="No classrooms yet"
-              description="Create your first classroom and start teaching or invite students."
-              action={
-                <Button onClick={() => setIsOpenCreateClassroom(true)} className="bg-indigo-600 text-white hover:bg-indigo-700 h-10 px-6 rounded-full font-bold gap-2 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
-                  <Plus size={18} />
-                  Create Classroom
-                </Button>
-              }
-            />
           ) : (
-            createdClassrooms?.map((classroom: ClassroomData, i: number) => (
+            <>
               <motion.div
-                key={classroom.classId}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
+                transition={{ duration: 0.4 }}
               >
-                <OwnedClassroomCard classroom={classroom} />
+                <CreateClassroomCard />
               </motion.div>
-            ))
+              {createdClassrooms?.map((classroom: ClassroomData, i: number) => (
+                <motion.div
+                  key={classroom.classId}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: (i + 1) * 0.1 }}
+                >
+                  <OwnedClassroomCard classroom={classroom} />
+                </motion.div>
+              ))}
+            </>
           )}
         </div>
-
-        <Dialog
-          open={isOpenCreateClassroom}
-          onOpenChange={handleCreateDialogOpenChange}
-        >
-          <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-3xl">
-            <DialogHeader>
-              <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
-                <BookOpen size={14} />
-                New Classroom
-              </div>
-              <DialogTitle className="text-xl md:text-2xl">Create a classroom</DialogTitle>
-              <DialogDescription>
-                Fill in the details below. You can always edit the classroom later.
-              </DialogDescription>
-            </DialogHeader>
-
-            <ClassroomForm form={createClassForm} />
-
-            <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Tip: Add a clear class name and a banner image so students can recognize this classroom quickly.
-            </div>
-
-            <DialogFooter className="gap-3 pt-4">
-              <Button
-                variant="ghost"
-                onClick={() => handleCreateDialogOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-indigo-600 text-white hover:bg-indigo-700 px-6 rounded-full font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
-                onClick={handleCreateClassroom}
-                disabled={isSubmitting || !createClassForm.formState.isDirty}
-              >
-                {isSubmitting ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin" />
-                    Creating...
-                  </span>
-                ) : (
-                  "Create class"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Discard changes?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You have unsaved classroom details. Closing now will remove your edits.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Keep editing</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDiscardChanges}>
-                Discard changes
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );
