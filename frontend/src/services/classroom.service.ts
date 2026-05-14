@@ -15,7 +15,7 @@ export const ClassroomService = {
     try {
       const res = await api.get<ClassroomData[]>(`api/classroom/get`)
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }
@@ -24,7 +24,7 @@ export const ClassroomService = {
     try {
       const res = await api.get<ClassroomData>(`api/classroom/get/${classId}`);
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }
@@ -33,7 +33,7 @@ export const ClassroomService = {
     try {
       const res = await api.delete(`api/classroom/delete/${classId}`);
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }
@@ -46,7 +46,7 @@ export const ClassroomService = {
         }
       });
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }

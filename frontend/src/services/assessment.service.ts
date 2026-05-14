@@ -8,7 +8,7 @@ export const AssessmentService = {
     try {
       const res = await api.post<Assessment>("api/assessment/create", data);
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }
@@ -21,7 +21,7 @@ export const AssessmentService = {
         }
       });
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }

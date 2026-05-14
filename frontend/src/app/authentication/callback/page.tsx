@@ -1,8 +1,8 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import { useAuth } from "@/components/context/AuthContext";
 
 const Callback = () => {
   const { storeUser } = useAuth();

@@ -11,7 +11,7 @@ export const QuestionService = {
         }
       });
       return res.data;
-    } catch (err: unknown) {
+    } catch (err: any) {
       queryError(err);
       throw err;
     }
