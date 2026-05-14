@@ -13,6 +13,7 @@ public record AssessmentData(
   Guid id,
   string title,
   string type,
+  float totalPoints,
   string status,
   DateTime createdAt,
   DateTime updatedAt

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using esecai.Application.UseCases.Classrooms;
 using esecai.Application.UseCases.Auth;
 using esecai.Application.UseCases.Assessments;
+using esecai.Application.UseCases.Questions;
 
 namespace esecai.Application;
 
@@ -33,6 +34,10 @@ public static class DependencyInjection
 
         // Register Assessment Use Cases
         services.AddScoped<CreateAssessmentUseCase>();
+        services.AddScoped<GetAssessmentUseCase>();
+
+        // Register Question Use Cases
+        services.AddScoped<GetQuestionUseCase>();
 
         return services;
     }

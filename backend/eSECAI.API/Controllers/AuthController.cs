@@ -47,39 +47,23 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <returns>AuthResponse with JWT token, refresh token, and user details if successful</returns>
     /// <response code="200">Fresh user data</response>
-    /// <response code="401">Acceess token expired/invalid</response>
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> CurrentUser() 
     {
-        try
-        {
-            //Extract the claims
-            // We check the .NET mapped type first, then fallback to the raw JWT name
-            var email = User.FindFirstValue(ClaimTypes.Email) 
-                ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
+        //Extract the claims
+        // We check the .NET mapped type first, then fallback to the raw JWT name
+        var email = User.FindFirstValue(ClaimTypes.Email) 
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
 
-            var freshData = await _getUseCase.ExecuteGetCurrentUser(email!);
+        var freshData = await _getUseCase.ExecuteGetCurrentUser(email!);
 
-            return Ok (new {
-                userId = freshData.user_id,
-                email = freshData.email,
-                displayName = freshData.display_name,
-                displayImage = freshData.display_image
-            });
-        }
-        catch (KeyNotFoundException knfEx)
-        {
-            return NotFound(knfEx.Message);
-        }
-        catch (EmailNotVerifiedException)
-        {
-            return Forbid();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Unauthorized("Invalid Token.");
-        }
+        return Ok (new {
+            userId = freshData.user_id,
+            email = freshData.email,
+            displayName = freshData.display_name,
+            displayImage = freshData.display_image
+        });
     }
     
     /// <summary>

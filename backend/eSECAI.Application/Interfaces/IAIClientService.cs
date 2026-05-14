@@ -1,5 +1,5 @@
 
-public interface IGeminiClientService
+public interface IAIClientService
 {
     Task<string> GenerateAsync(
       string prompt,

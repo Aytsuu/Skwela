@@ -17,10 +17,12 @@ namespace esecai.API.Controllers;
 public class AssessmentController : ControllerBase
 {
     private readonly CreateAssessmentUseCase _createUseCase;
+    private readonly GetAssessmentUseCase _getUseCase;
 
-    public AssessmentController(CreateAssessmentUseCase createUseCase)
+    public AssessmentController(CreateAssessmentUseCase createUseCase, GetAssessmentUseCase getUseCase)
     {
         _createUseCase = createUseCase;
+        _getUseCase = getUseCase;
     }
 
     public class CreateAssessmentRequest
@@ -64,6 +66,30 @@ public class AssessmentController : ControllerBase
             // Await execution
             await _createUseCase.ExecuteCreateAsync(fileReqs, request.classId);
             return Ok(new { message = "Assessment processing started." });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { message = e.Message, stack = e.StackTrace });
+        }
+    }
+
+    [Authorize]
+    [HttpGet("get")]
+    public async Task<IActionResult> GetAssessmentList([FromQuery] Guid classId)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Safely parse string to type Guid
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                return Unauthorized(new { message = "Invalid or missing user ID in token." });
+            }
+
+            var assessments = await _getUseCase.ExecuteGetAssessmentListAsync(classId);
+            
+            return Ok(assessments);
         }
         catch (Exception e)
         {

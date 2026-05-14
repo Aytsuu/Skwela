@@ -1,5 +1,5 @@
 
-namespace esecai.Infrastructure.Services.Docs;
+namespace esecai.Infrastructure.Services.Prompts;
 
 public static class GeminiPrompts
 {

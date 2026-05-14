@@ -1,0 +1,66 @@
+{
+  "sec": "Test II: True or False (10 pts)",
+  "inst": "Directions: Write TRUE if the statement is correct and FALSE if it is incorrect on the blank before each number. Each item is worth 1 point.",
+  "qts": [
+    {
+      "number": 1,
+      "question": "A string in C# is a reference type.",
+      "choices": [],
+      "answer": "TRUE"
+    },
+    {
+      "number": 2,
+      "question": "The \u0022void\u0022 return type means a method returns zero.",
+      "choices": [],
+      "answer": "FALSE"
+    },
+    {
+      "number": 3,
+      "question": "An array index in C# starts at 1.",
+      "choices": [],
+      "answer": "FALSE"
+    },
+    {
+      "number": 4,
+      "question": "Encapsulation is one of the four pillars of OOP.",
+      "choices": [],
+      "answer": "TRUE"
+    },
+    {
+      "number": 5,
+      "question": "The \u0022break\u0022 statement can be used to exit a loop prematurely.",
+      "choices": [],
+      "answer": "TRUE"
+    },
+    {
+      "number": 6,
+      "question": "Inheritance allows a child class to use the properties and methods of a parent class.",
+      "choices": [],
+      "answer": "TRUE"
+    },
+    {
+      "number": 7,
+      "question": "A constructor must have the same name as the class.",
+      "choices": [],
+      "answer": "TRUE"
+    },
+    {
+      "number": 8,
+      "question": "The \u0022==\u0022 operator compares values while \u0022.Equals()\u0022 compares references for strings.",
+      "choices": [],
+      "answer": "FALSE"
+    },
+    {
+      "number": 9,
+      "question": "A \u0022for\u0022 loop always requires an initialization, condition, and increment.",
+      "choices": [],
+      "answer": "FALSE"
+    },
+    {
+      "number": 10,
+      "question": "In C#, you can have multiple catch blocks for a single try block.",
+      "choices": [],
+      "answer": "TRUE"
+    }
+  ]
+}

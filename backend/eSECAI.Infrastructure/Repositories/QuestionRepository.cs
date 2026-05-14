@@ -1,6 +1,7 @@
 using esecai.Application.Interfaces;
 using esecai.Domain.Entities;
 using esecai.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace esecai.Infrastructure.Repositories;
 
@@ -29,5 +30,12 @@ public class QuestionRepository : IQuestionRepository
         await _context.SaveChangesAsync();
 
         return questions;
+    }
+
+    public async Task<IEnumerable<Question>> GetAssessmentQuestionsAsync(Guid assId)
+    {
+        return await _context.Questions
+            .Where(e => e.ass_id == assId)
+            .ToListAsync();
     }
 }

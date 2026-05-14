@@ -10,7 +10,7 @@ using esecai.Infrastructure.Data;
 using esecai.Application.Interfaces;
 using esecai.Application.DTOs;
 using esecai.Infrastructure.Services;
-using esecai.Infrastructure.Services.Docs;
+using esecai.Infrastructure.Services.Prompts;
 using esecai.Infrastructure.Repositories;
 using NRedisStack;
 using StackExchange.Redis;
@@ -142,7 +142,40 @@ public static class DependencyInjection
             .Build());
         
         services.AddSignalR();
-        services.Configure<GeminiOptions>(config.GetSection(GeminiOptions.SectionName));      
+        services.AddHttpClient();
+        services.Configure<AIOptions>(config.GetSection(AIOptions.SectionName));
+        services.PostConfigure<AIOptions>(options =>
+        {
+            // Allow non-standard env var naming if provided in .env files.
+            if (string.IsNullOrWhiteSpace(options.OllamaBaseUrl))
+            {
+                options.OllamaBaseUrl = config["AI_OllamaBaseUrl"] ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.OllamaApiEndpoint))
+            {
+                options.OllamaApiEndpoint = config["AI_OllamaApiEndpoint"] ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.OllamaApiKey))
+            {
+                options.OllamaApiKey = config["AI_OllamaApiKey"] ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.GeminiApiKey))
+            {
+                options.GeminiApiKey = config["AI_GeminiApiKey"]
+                    ?? config["Gemini__ApiKey"]
+                    ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.GeminiModel))
+            {
+                options.GeminiModel = config["AI_GeminiModel"]
+                    ?? config["Gemini__Model"]
+                    ?? string.Empty;
+            }
+        });      
 
         // Register Repository and External Services
         services.AddScoped<AuthService>();
@@ -155,7 +188,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<IPdfService, PdfService>();  
-        services.AddScoped<IGeminiClientService, GeminiClientService>();
+        services.AddScoped<IAIClientService, AIClientService>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();
 
         return services;

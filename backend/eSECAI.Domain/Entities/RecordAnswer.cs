@@ -13,8 +13,8 @@ public class RecordAnswer
     public float ra_awarded_pts { get; set; }
     public float ra_ai_confidence { get; set; }
     public string ra_feedback { get; set; } = default!;
-    public bool ra_teacher_rev { get; set; }
-    public float ra_teacher_op { get; set; }
+    public bool ra_teacher_rev { get; set; } // teacher review required
+    public float ra_teacher_op { get; set; } // teacher override points
     
     [Column(TypeName = "jsonb")]
     public string ra_raw_response { get; set; } = "null";

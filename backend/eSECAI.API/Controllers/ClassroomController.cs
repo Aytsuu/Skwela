@@ -14,7 +14,7 @@ namespace esecai.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/classroom")]
-public class ClassroomsController : ControllerBase
+public class ClassroomController : ControllerBase
 {
     private readonly CreateClassroomUseCase _createUseCase;
     private readonly GetClassroomUseCase _getUseCase;
@@ -27,7 +27,7 @@ public class ClassroomsController : ControllerBase
     /// <param name="createUseCase">Use case for creating classrooms</param>
     /// <param name="getUseCase">Use case for retrieving classroom data</param>
     /// <param name="deleteUseCase">Use case for deleting classrooms</param>
-    public ClassroomsController(
+    public ClassroomController(
         CreateClassroomUseCase createUseCase, 
         GetClassroomUseCase getUseCase, 
         DeleteClassroomUseCase deleteUseCase,

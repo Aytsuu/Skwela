@@ -74,7 +74,12 @@ public class GetClassroomUseCase
             throw new InvalidOperationException($"The creator data for classroom {classroom.class_id} was not loaded from the database.");
         }
 
-        string signedLink = await _minioFileService.GetSignedLink(classroom.class_banner);
+        string signedLink = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(classroom.class_banner))
+        {
+            signedLink = await _minioFileService.GetSignedLink(classroom.class_banner);
+        }
 
         // Build and return response DTO
         return new ClassroomDataResponse(
