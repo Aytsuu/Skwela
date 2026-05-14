@@ -31,7 +31,6 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeClosed, Loader2, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import Image from "next/image";
 
 const PageComponent = () => {
   const router = useRouter();
@@ -96,13 +95,12 @@ const PageComponent = () => {
         <ArrowLeft className="w-4 h-4" />
         Back to Home
       </Link>
-      <div className="mb-8 flex items-center justify-center gap-1 group">
-        <Image
+      <div className="mb-8 flex items-center justify-center gap-2 group">
+        <img
           src="/assets/esecai_logo.svg"
           alt="esecai logo"
-          width={44}
-          height={44}
-          priority
+          width={34}
+          height={34}
           className="transition-transform duration-300 group-hover:rotate-12"
         />
         <span className="font-black text-3xl tracking-tighter">esecai</span>

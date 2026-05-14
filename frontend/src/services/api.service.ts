@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { AuthService } from './auth.service';
 
 // API instance with credentials enabled
 export const api = axios.create({
@@ -12,11 +11,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url ?? "";
+    const isAuthFlowRequest =
+      requestUrl.includes('api/auth/me') ||
+      requestUrl.includes('api/auth/login') ||
+      requestUrl.includes('api/auth/logout') ||
+      requestUrl.includes('api/auth/refresh-token');
 
-    if (
-      originalRequest.url.includes('api/auth/me') ||
-      originalRequest.url.includes('api/auth/login')
-    ) {
+    if (isAuthFlowRequest) {
       return Promise.reject(error);
     }
     
@@ -30,7 +32,9 @@ api.interceptors.response.use(
         return api(originalRequest);
 
       } catch (refreshError) {
-        AuthService.logout();
+        if (typeof window !== "undefined" && window.location.pathname !== "/authentication/login") {
+          window.location.replace("/authentication/login");
+        }
         return Promise.reject(refreshError);
       }
     }

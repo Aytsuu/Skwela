@@ -43,8 +43,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
-import Image from "next/image";
-
 interface DropdownItem {
   title: string;
   icon: LucideIcon;
@@ -95,11 +93,11 @@ export const Header = () => {
         <div className="flex items-center gap-2 h-full">
           <Link href="/" className="flex items-center gap-1 mr-4 group">
             <div className="relative flex items-center justify-center">
-              <Image 
+              <img
                 src="/assets/esecai_logo.svg" 
                 alt="esecai logo" 
-                width={40} 
-                height={40} 
+                width={30}
+                height={30}
                 className="transition-transform duration-300 group-hover:rotate-12"
               />
             </div>

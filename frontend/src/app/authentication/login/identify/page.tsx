@@ -26,7 +26,6 @@ import { ChevronLeft, Loader2, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import Cookies from "js-cookie";
@@ -71,18 +70,17 @@ const PageComponent = () => {
     <div className="w-screen h-screen flex flex-col justify-center items-center bg-custom-primary relative">
       <Link
         href="/"
-        className="absolute top-8 left-8 flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+        className="absolute top-8 left-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back
+        Back to Home
       </Link>
-      <div className="mb-8 flex items-center justify-center gap-1 group">
-        <Image
+      <div className="mb-8 flex items-center justify-center gap-2 group">
+        <img
           src="/assets/esecai_logo.svg"
           alt="esecai logo"
-          width={44}
-          height={44}
-          priority
+          width={34}
+          height={34}
           className="transition-transform duration-300 group-hover:rotate-12"
         />
         <span className="font-black text-3xl tracking-tighter">esecai</span>

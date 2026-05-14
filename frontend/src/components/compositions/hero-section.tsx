@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { DashboardVisualization } from "./dashboard-visualization";
+import Image from "next/image";
 
 export interface HeroSectionProps {
   onScrollToSection: (id: string) => void;
@@ -27,7 +28,7 @@ export const HeroSection = ({ onScrollToSection }: HeroSectionProps) => {
 
   return (
     <section className="py-24 md:py-40 px-8 max-w-6xl mx-auto text-center relative overflow-hidden">
-      {/* Background Blobs */}
+      {/* Background Blobs & Hero BG */}
       <div className="bg-blob w-[500px] h-[500px] bg-primary/30 -top-24 -left-24" />
       <div className="bg-blob w-[400px] h-[400px] bg-secondary/20 bottom-0 -right-24" />
 
@@ -38,12 +39,8 @@ export const HeroSection = ({ onScrollToSection }: HeroSectionProps) => {
         className="space-y-8 relative z-10"
       >
         <motion.div variants={fadeInUp} className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[11px] font-bold uppercase tracking-wider text-primary shadow-glow">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-            The future of classroom security
-          </div>
           <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-[1.05] selection:bg-primary selection:text-white">
-            The Classroom, <br/><span className="gradient-text">Evolved.</span>
+            Your classroom, <br/><span className="gradient-text">evolved.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
             AI-powered security and engagement analysis for modern education. 

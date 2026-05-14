@@ -1,6 +1,5 @@
 import Link from "next/link";
 import React from "react";
-import Image from "next/image";
 
 export const Footer = () => {
   return (
@@ -9,11 +8,11 @@ export const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
           <div className="space-y-4">
             <div className="flex items-center gap-2 group">
-              <Image 
+              <img
                 src="/assets/esecai_logo.svg" 
                 alt="esecai logo" 
-                width={44} 
-                height={44} 
+                width={34}
+                height={34}
                 className="transition-transform duration-300 group-hover:rotate-12"
               />
               <span className="font-bold text-2xl tracking-tight">esecai</span>

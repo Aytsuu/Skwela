@@ -5,8 +5,6 @@ import { Shield, Github } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-import Image from "next/image";
-
 export interface NavbarProps {
   onScrollToSection: (id: string) => void;
 }
@@ -16,15 +14,14 @@ export const Navbar = ({ onScrollToSection }: NavbarProps) => {
     <nav className="fixed top-0 left-0 right-0 z-50 shadow-sm bg-indigo-50/30 backdrop-blur-lg transition-all">
       <div className="flex justify-between items-center mx-auto max-w-6xl py-4 px-8">
         <span 
-          className="font-bold text-xl tracking-tight cursor-pointer flex items-center gap-1 group" 
+          className="font-bold text-xl tracking-tight cursor-pointer flex items-center group" 
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
-          <Image 
+          <img
             src="/assets/esecai_logo.svg" 
             alt="esecai logo" 
-            width={40} 
-            height={40} 
-            priority
+            width={34}
+            height={34}
             className="transition-transform duration-300 group-hover:rotate-12"
           />
         </span>

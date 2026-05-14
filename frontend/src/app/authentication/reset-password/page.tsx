@@ -26,7 +26,6 @@ import { ChevronLeft, Eye, EyeClosed, Loader2, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import Cookies from "js-cookie";
@@ -93,12 +92,11 @@ const PageComponent = () => {
         Back
       </Link>
       <div className="mb-8 flex items-center justify-center gap-1 group">
-        <Image
+        <img
           src="/assets/esecai_logo.svg"
           alt="esecai logo"
-          width={44}
-          height={44}
-          priority
+          width={34}
+          height={34}
           className="transition-transform duration-300 group-hover:rotate-12"
         />
         <span className="font-black text-3xl tracking-tighter">esecai</span>

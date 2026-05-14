@@ -3,7 +3,6 @@
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 import { AuthService } from "@/services/auth.service";
-import { redirect } from "next/navigation";
 import { queryError } from "@/helpers/errorDisplay";
 import { UserProfile } from "@/types/auth";
 
@@ -31,7 +30,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Logout failed on the server, clearing local state anyway", error);
     } finally {
       setUser(null);
-      redirect('/authentication/login'); 
+      if (typeof window !== "undefined") {
+        window.location.replace("/authentication/login");
+      }
     }
   };
 
@@ -47,12 +48,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           displayName: me.displayName,
           displayImage: me.displayImage
         });
-      } catch (error) {
+      } catch (error: any) {
         // 401 on /me is expected when no session exists.
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           setUser(null);
         } else {
-          queryError(error as any);
+          queryError(error);
           setUser(null);
         }
       } finally {
