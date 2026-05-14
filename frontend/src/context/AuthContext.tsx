@@ -1,21 +1,24 @@
 "use client";
 
+import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
-import { UserProfile } from "../../types/auth";
 import { AuthService } from "@/services/auth.service";
 import { redirect } from "next/navigation";
 import { queryError } from "@/helpers/errorDisplay";
+import { UserProfile } from "@/types/auth";
 
 interface AuthContextType {
-  user: UserProfile;
-  storeUser: (userData: UserProfile) => void;
-  logout: () => void;
+  user: UserProfile | null;
+  authChecked: boolean;
+  storeUser: (userData: UserProfile | null) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const storeUser = (userData: UserProfile | null) => {
     setUser(userData);
@@ -44,19 +47,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           displayName: me.displayName,
           displayImage: me.displayImage
         });
-      } catch (err: any) {
-        queryError(err);
-        setUser(null);
+      } catch (error) {
+        // 401 on /me is expected when no session exists.
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          setUser(null);
+        } else {
+          queryError(error as any);
+          setUser(null);
+        }
       } finally {
-        // Do nothing, let it finish 
+        setAuthChecked(true);
       }
     };
 
-    getCurrentUser();
+    void getCurrentUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user: user!, storeUser, logout }}>
+    <AuthContext.Provider value={{ user, authChecked, storeUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,50 +3,49 @@
 import React, { createContext, useEffect, useState, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { toast } from "sonner";
+import { useAuth } from './AuthContext';
 
 interface NotificationProps {
-  notifications: any[]
+  notifications: unknown[]
   unreadCount: number
 }
 
 export const NotificationContext = createContext<NotificationProps | null>(null);
 
 export const NotificationProvider = ({ children } : { children: React.ReactNode }) => {
-    const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const { user } = useAuth();
+
+    const [connection, _setConnection] = useState<signalR.HubConnection | null>(() => {
+        if (typeof window === "undefined") return null;
+        const baseURL = process.env.NODE_ENV === "development" ? "http://localhost:8080" : process.env.NEXT_PUBLIC_API_URL;
+        return new signalR.HubConnectionBuilder()
+            .withUrl(`${baseURL}/hubs/notifications`, {
+                withCredentials: true
+            })
+            .withAutomaticReconnect()
+            .build();
+    });
+    const [notifications, setNotifications] = useState<unknown[]>([]);
 
     useEffect(() => {
-        if (!connection) {
-            const baseURL = process.env.NODE_ENV === "development" ? "http://localhost:8080" : process.env.NEXT_PUBLIC_API_URL;
-            const newConnection = new signalR.HubConnectionBuilder()
-                .withUrl(`${baseURL}/hubs/notifications`, {
-                    withCredentials: true
-                })
-                .withAutomaticReconnect()
-                .build();
-
-            setConnection(newConnection);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (connection) {
+        if (connection && user) {
             connection.start()
                 .then(() => {
-                    connection.on("ReceiveNotification", (notification: any) => {
+                    connection.on("ReceiveNotification", (notification: unknown) => {
+                        const notif = notification as { message?: string, title?: string };
                         // Add to state
                         setNotifications(prev => [notification, ...prev]);
                         // Show visual alert
-                        toast.success(notification.message, { title: notification.title } as any);
+                        toast.success(notif.message || "", { title: notif.title } as unknown as any); // eslint-disable-line @typescript-eslint/no-explicit-any
                     });
                 })
-                .catch((e: any) => console.log('Connection failed: ', e));
+                .catch((e: unknown) => console.log('Connection failed: ', e));
         }
 
         return () => {
             if (connection) connection.stop();
         };
-    }, [connection]);
+    }, [connection, user]);
 
     return (
         <NotificationContext.Provider value={{ notifications, unreadCount: notifications.length }}>

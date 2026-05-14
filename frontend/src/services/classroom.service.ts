@@ -1,14 +1,11 @@
+import { queryError } from "@/helpers/errorDisplay";
 import { ClassroomData } from "../types/classroom";
 import { api } from "./api.service";
 
 export const ClassroomService = {
   create: async (data: FormData) => {
     try {
-      const res = await api.post<ClassroomData>('api/classroom/create', data, {
-        headers: {
-          "Content-Type" : "multipart/form-data"
-        }
-      });
+      const res = await api.post<ClassroomData>('api/classroom/create', data);
       return res.data;
     } catch (err) {
       throw err;
@@ -18,7 +15,8 @@ export const ClassroomService = {
     try {
       const res = await api.get<ClassroomData[]>(`api/classroom/get`)
       return res.data;
-    } catch (err) {
+    } catch (err: unknown) {
+      queryError(err);
       throw err;
     }
   },
@@ -26,7 +24,8 @@ export const ClassroomService = {
     try {
       const res = await api.get<ClassroomData>(`api/classroom/get/${classId}`);
       return res.data;
-    } catch (err) {
+    } catch (err: unknown) {
+      queryError(err);
       throw err;
     }
   },
@@ -34,7 +33,8 @@ export const ClassroomService = {
     try {
       const res = await api.delete(`api/classroom/delete/${classId}`);
       return res.data;
-    } catch (err) {
+    } catch (err: unknown) {
+      queryError(err);
       throw err;
     }
   },
@@ -46,7 +46,8 @@ export const ClassroomService = {
         }
       });
       return res.data;
-    } catch (err) {
+    } catch (err: unknown) {
+      queryError(err);
       throw err;
     }
   }

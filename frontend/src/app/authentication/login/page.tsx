@@ -1,213 +1,35 @@
 "use client";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../../../components/ui/form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "../../../components/ui/input";
-import { loginSchema } from "../../../schemas/auth.schema";
-import { useForm } from "react-hook-form";
-import { Button } from "../../../components/ui/button";
 import React from "react";
-import { useLogin } from "../../../hooks/use-auth";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { api } from "@/services/api.service";
-import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Eye, EyeClosed, Loader2, LucideIcon, ArrowLeft } from "lucide-react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-import Cookies from 'js-cookie';
+import { ArrowLeft, Shield } from "lucide-react";
+import { LoginForm } from "@/components/compositions/login-form";
 
-export default () => {
-  // Hooks & States
-  const router = useRouter();
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+import Image from "next/image";
 
-  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const [showPassword, setShowPassword] = React.useState<boolean>(false);
-  const Icon: LucideIcon = showPassword ? EyeClosed : Eye;
-
-  // Queries
-  const { mutateAsync: login } = useLogin();
-
-  // watch fields
-  const email = form.watch('email');
-  const password = form.watch('password');
-
-  // Effects
-  React.useEffect(() => {
-    form.clearErrors(["email", "password"]);
-  }, [email, password])
-
-  // Handlers
-  const handleLogin = async () => {
-    if (!(await form.trigger())) {
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await login(form.getValues());
-      router.replace("/dashboard");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const status = err.response?.status;
-        const errorData = err.response?.data;
-        if (status === 403) {
-          // Store the email temporarily to cookie for OTP verification
-          const inFiveMinutes = new Date(new Date().getTime() + 5 * 60 * 1000);
-          Cookies.set("otp_email", form.getValues().email, { expires: inFiveMinutes, path: "/" })
-          router.push("verify?type=login");
-        } else if (status === 404) {
-          form.setError("email", {
-            type: "server",
-            message: errorData
-          })
-        } else {
-          form.setError("password", {
-            type: "server",
-            message: errorData
-          })
-
-          form.setError("email", {})
-        }
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+const LoginPage = () => {
   return (
-    <div className="w-screen h-screen flex flex-col justify-center items-center bg-custom-primary relative">
-      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+    <div className="w-screen h-screen flex flex-col justify-center items-center bg-background relative selection-notion">
+      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
         <ArrowLeft className="w-4 h-4" />
-        Back
+        Back to Home
       </Link>
-      <div className="mb-6">
-        <span className="font-bold text-3xl tracking-tight">esecai</span>
+      
+      <div className="mb-8 flex items-center justify-center gap-1 group">
+        <Image 
+          src="/assets/esecai_logo.svg" 
+          alt="esecai logo" 
+          width={44} 
+          height={44} 
+          priority
+          className="transition-transform duration-300 group-hover:rotate-12"
+        />
+        <span className="font-black text-3xl tracking-tighter">esecai</span>
       </div>
-      <Form {...form}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
-          }}
-          // className="rounded-sm flex flex-col gap-6 items-center w-110 border border-white/10 p-10 shadow-lg bg-custom-primary-contrast"
-        >
-          <Card className="w-sm bg-custom-primary-contrast">
-            <CardHeader>
-              <CardTitle>Login to your account</CardTitle>
-              <CardDescription>
-                Enter your email below to login to your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="w-full flex flex-col gap-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
-                            className="pr-10"
-                            {...field}
-                          />
-                          <Icon 
-                            size={18} 
-                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80"
-                            onClick={() => setShowPassword(!showPassword)}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <span className="text-right cursor-pointer text-sm text-slate-500 hover:text-indigo-600 hover:underline"
-                  onClick={() => router.push("login/identify")}
-                >
-                  Forgot Password?
-                </span>
-              </div>
-
-              <div className="w-full flex flex-col gap-4">
-                <Button
-                  className="h-10 text-base cursor-pointer"
-                  type={"submit"}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting && <Loader2 className="animate-spin"/>}
-                  Login
-                </Button>
-                <div className="mx-auto text-sm flex gap-1 text-slate-500 items-center">
-                  Don't have an account?
-                  <Link
-                    href={"signup"}
-                    className="text-indigo-600 font-medium hover:underline"
-                  >
-                    Create
-                  </Link>
-                </div>
-              </div>
-
-              <div className="relative w-full flex items-center justify-center py-2">
-                <Separator />
-                <p className="absolute bg-white px-2 text-xs text-slate-400 font-medium">
-                  OR
-                </p>
-              </div>
-
-              <Link
-                href={`${api.defaults.baseURL}/api/auth/login-google?returnUrl=${process.env.NODE_ENV == "development" ? "http://localhost:3000" : process.env.NEXT_PUBLIC_URL}`}
-                className="bg-white hover:bg-slate-50 text-slate-700 font-medium flex justify-center items-center gap-2 border border-slate-200 w-full h-10 rounded-lg shadow-sm transition-colors"
-              >
-                <FcGoogle size={22} />
-                Sign in with Google
-              </Link>
-            </CardContent>
-          </Card>
-        </form>
-      </Form>
+      <LoginForm />
     </div>
   );
 }
+
+export default LoginPage;

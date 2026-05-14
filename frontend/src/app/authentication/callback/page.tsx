@@ -35,10 +35,12 @@ const Callback = () => {
   return <div>Authenticating...</div>;
 }
 
-export default () => {
+const srcappauthenticationcallbackpageComponent = () => {
   return (
     <React.Suspense fallback={<div>Loading...</div>}>
       <Callback/>
     </React.Suspense>
   )
 }
+
+export default srcappauthenticationcallbackpageComponent;

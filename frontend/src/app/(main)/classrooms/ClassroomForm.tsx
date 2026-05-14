@@ -9,7 +9,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { classroomSchema } from "@/schemas/classroom.schema";
-import { BookOpen } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import z from "zod";
@@ -20,24 +21,45 @@ export default function ClassroomForm({
   form: UseFormReturn<z.infer<typeof classroomSchema>>;
 }) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const descriptionValue = form.watch("description") || "";
+
   return (
     <Form {...form}>
-      <div className="grid grid-cols-2 gap-6 py-2">
+      <div className="grid grid-cols-1 gap-6 py-2 md:grid-cols-2">
         {/* Left — Image Upload */}
         <FormField
           control={form.control}
           name="bannerFile"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Class banner</FormLabel>
+              <div className="mb-1 flex items-center justify-between">
+                <FormLabel>Class banner</FormLabel>
+                {!!field.value && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs"
+                    onClick={() => {
+                      field.onChange("");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                  >
+                    <X size={12} />
+                    Remove
+                  </Button>
+                )}
+              </div>
               <FormControl>
                 <label
-                  className="flex flex-col items-center justify-center flex-1 h-45 border-2 border-dashed border-muted-foreground/25 rounded-xl cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="flex h-44 flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/30 transition-colors hover:bg-muted/50 md:h-45"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
                     const file = e.dataTransfer.files[0];
-                    if (file) field.onChange(file);
+                      if (file) field.onChange(file);
                   }}
                 >
                   {field.value ? (
@@ -113,9 +135,14 @@ export default function ClassroomForm({
                 <FormControl>
                   <Textarea
                     placeholder="Brief overview of the class"
+                      rows={5}
+                      maxLength={240}
                     {...field}
                   />
                 </FormControl>
+                <p className="text-right text-xs text-muted-foreground">
+                  {descriptionValue.length}/240
+                </p>
                 <FormMessage />
               </FormItem>
             )}

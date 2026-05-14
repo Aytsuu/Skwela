@@ -14,11 +14,3 @@ export interface ClassroomData {
   classBanner: string;
   creator?: UserProfile
 }
-
-interface Post {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: UserProfile;
-  isPinned?: boolean;
-}

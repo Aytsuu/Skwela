@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
 
-export default function Protected({children, error} : {children: React.ReactNode; error: any}) {
+export default function Protected({children, error} : {children: React.ReactNode; error: unknown}) {
   const router = useRouter();
   const [isMounted, setIsMounted] = React.useState<boolean>(false);
 

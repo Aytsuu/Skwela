@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClassroomService } from "../services/classroom.service";
 import { ClassroomData } from "../types/classroom";
-import { useAuth } from "../components/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export const useCreateClassroom = () => {
   const queryClient = useQueryClient();
@@ -10,11 +10,11 @@ export const useCreateClassroom = () => {
     mutationFn: ClassroomService.create,
     onSuccess: (data: ClassroomData) => {
       queryClient.setQueryData(
-        ["createdClassrooms", user.userId],
+        ["createdClassrooms", user?.userId],
         (old: ClassroomData[] = []) => [...old, data],
       );
       queryClient.invalidateQueries({
-        queryKey: ["classroomsByCreator", user.userId],
+        queryKey: ["classroomsByCreator", user?.userId],
       });
     },
   });
@@ -48,13 +48,13 @@ export const useDeleteClassroom = () => {
     mutationFn: ClassroomService.delete,
     onSuccess: (_, classId) => {
       queryClient.setQueryData(
-        ["classroomsByCreator", user.userId],
+        ["classroomsByCreator", user?.userId],
         (old: ClassroomData[]) =>
           old.filter((prev) => prev.classId !== classId),
       );
       
       queryClient.invalidateQueries({
-        queryKey: ["classroomsByCreator", user.userId],
+        queryKey: ["classroomsByCreator", user?.userId],
       });
     },
   });
@@ -68,7 +68,7 @@ export const useUpdateClassroom = () => {
       ClassroomService.update(classId, data),
     onSuccess: (data: ClassroomData, variables) => {
       const { classId } = variables;
-      queryClient.setQueryData(["classroomData", classId, user.userId], (old: ClassroomData) => ({
+      queryClient.setQueryData(["classroomData", classId, user?.userId], (old: ClassroomData) => ({
         ...old,
         ...data
       }));
