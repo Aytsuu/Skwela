@@ -38,12 +38,13 @@ eSECAI (Electronic Student Engagement Checker — powered by AI) is an intellige
 ## Project Structure
 
 ```
-Skwela/
+esecai/
 ├── backend/                          # .NET Backend
-│   ├── Skwela.API/                   # REST API & Controllers
-│   ├── Skwela.Application/           # Business Logic & Use Cases
-│   ├── Skwela.Domain/                # Domain Entities & Models
-│   ├── Skwela.Infrastructure/        # Data Access & Services
+│   ├── esecai.API/                   # REST API & Controllers
+│   ├── esecai.Application/           # Business Logic & Use Cases
+│   ├── esecai.Domain/                # Domain Entities & Models
+│   ├── esecai.Infrastructure/        # Data Access & Services
+│   ├── esecai.Tests/                 # Unit testing
 │   ├── Skwela.sln                    # Solution File
 │   ├── docker-compose.yml            # Docker Compose Configuration
 │   ├── Dockerfile                    # Docker Image Definition
