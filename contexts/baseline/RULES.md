@@ -16,7 +16,7 @@
 - Ship code without checking the relevant test suite.
 
 ## Agent Format
-- Agents live in `ai/agents/*.md`.
+- Agents live in `contexts/agents/*.md`.
 - Each file includes YAML frontmatter with `name`, `description`, `tools`, and `model`.
 - File names are lowercase with hyphens and must match the agent name.
 - Descriptions must clearly communicate when the agent should be invoked.
@@ -28,7 +28,7 @@
 - Skill bodies should include practical guidance, tested examples, and clear "When to Use" sections.
 
 ## Rule Format
-- Rules live in `ai/rules/<domain>/`.
+- Rules live in `contexts/rules/<domain>/`.
 - Keep rule files narrow, reusable, and named for the concern they enforce.
 
 ## Hook Format

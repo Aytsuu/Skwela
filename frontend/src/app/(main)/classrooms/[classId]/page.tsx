@@ -65,11 +65,12 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { classroomSchema } from "@/schemas/classroom.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import ClassroomForm from "../ClassroomForm";
+import ClassroomForm from "../../../../components/compositions/classroom-form";
 import { useAssessmentList, useCreateAssessment } from "@/hooks/use-assessment";
 import { useGetAssessmentQuestions } from "@/hooks/use-question";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { queryError } from "@/helpers/errorDisplay";
 import { Question } from "@/types/question";
@@ -358,7 +359,7 @@ const PageComponent = () => {
 
   const [selectedAssessmentId, setSelectedAssessmentId] = React.useState<string | null>(null);
   const [selectedAssessmentTitle, setSelectedAssessmentTitle] = React.useState<string | null>(null);
-  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = React.useState<string>("answer-key");
 
   const { mutateAsync: deleteClassroom } = useDeleteClassroom();
   const { mutateAsync: updateClassroom } = useUpdateClassroom();
@@ -376,6 +377,48 @@ const PageComponent = () => {
     data: assessmentQstns,
     isLoading: isLoadingQuestions,
   } = useGetAssessmentQuestions(selectedAssessmentId ?? "");
+
+  // Sync state with URL params
+  React.useEffect(() => {
+    const aid = urlParams.get("aid");
+    const tab = urlParams.get("tab");
+    
+    if (aid) setSelectedAssessmentId(aid);
+    if (tab) setActiveTab(tab);
+  }, [urlParams]);
+
+  const updateUrl = (aid: string | null, tab: string) => {
+    const params = new URLSearchParams(urlParams.toString());
+    if (aid) params.set("aid", aid);
+    else params.delete("aid");
+    
+    if (tab && tab !== "answer-key") params.set("tab", tab);
+    else params.delete("tab");
+    
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleSelectAssessment = (id: string, title: string) => {
+    setSelectedAssessmentId(id);
+    setSelectedAssessmentTitle(title);
+    updateUrl(id, activeTab);
+  };
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    updateUrl(selectedAssessmentId, tabId);
+  };
+
+  // Sync title when assessments load and aid is in URL
+  React.useEffect(() => {
+    if (selectedAssessmentId && assessments && assessments.length > 0) {
+      const current = assessments.find(a => a.id === selectedAssessmentId);
+      if (current) {
+        setSelectedAssessmentTitle(current.title);
+      }
+    }
+  }, [selectedAssessmentId, assessments]);
+  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({});
 
   // Flags
   const hasUpdate = form.formState.isDirty;
@@ -688,6 +731,10 @@ const PageComponent = () => {
               <Link
                 href="/classrooms"
                 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors group"
+                onClick={() => {
+                  setSelectedAssessmentId(null);
+                  setSelectedAssessmentTitle(null);
+                }}
               >
                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                 BACK TO CLASSROOMS
@@ -729,10 +776,7 @@ const PageComponent = () => {
                     transition={{ duration: 0.3, delay: i * 0.05 }}
                   >
                     <div
-                      onClick={() => {
-                        setSelectedAssessmentId(assessment.id);
-                        setSelectedAssessmentTitle(assessment.title);
-                      }}
+                      onClick={() => handleSelectAssessment(assessment.id, assessment.title)}
                       className={`group p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${
                         selectedAssessmentId === assessment.id 
                           ? "border-primary bg-primary/5 ring-1 ring-primary/10" 
@@ -805,116 +849,152 @@ const PageComponent = () => {
                 </p>
               </div>
             ) : (
-              <>
+              <div className="flex-1 flex flex-col min-h-0">
                 {/* Fixed Header section */}
-                <div className="px-6 py-4 border-b border-border bg-background z-10">
-                  <div className="w-full flex items-center justify-between gap-4">
-                    <header className="space-y-1">
-                      <h1 className="text-lg font-semibold">
-                        {selectedAssessmentTitle}
-                      </h1>
-                    </header>
-                  </div>
+                <div className="flex justify-between items-center gap-8 px-6 border-b border-border bg-background z-10 h-14 flex-shrink-0">
+                  <header>
+                    <h1 className="text-lg font-semibold whitespace-nowrap">
+                      {selectedAssessmentTitle}
+                    </h1>
+                  </header>
+
+                  <nav className="flex items-center gap-4 h-full">
+                    {[
+                      { id: "answer-key", label: "Answer Key" },
+                      { id: "submissions", label: "Submissions" },
+                      { id: "rating", label: "Rating" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 px-2 py-4 text-sm font-semibold transition-colors relative h-full",
+                          activeTab === tab.id
+                            ? "text-primary font-bold"
+                            : "text-muted-foreground hover:text-primary"
+                        )}
+                      >
+                        {tab.label}
+                        {activeTab === tab.id && (
+                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
+                        )}
+                      </button>
+                    ))}
+                  </nav>
                 </div>
 
                 {/* Scrollable Content section */}
                 <div className="flex-1 overflow-y-auto p-6">
-                  <div className="max-w-4xl mx-auto space-y-4">
-                    {organizedQuestions.map((section, i) => (
-                      <motion.div
-                        key={section.type}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: i * 0.1 }}
-                      >
-                        <Card className="overflow-hidden border-border/60 shadow-sm">
-                          <CardHeader className="border-b bg-muted/25 px-5 py-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <CardTitle className="text-base font-semibold">{formatQuestionTypeLabel(section.type)}</CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Badge className="font-bold">{section.questions.length} questions</Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleSection(section.type)}
-                                  className="h-8 gap-1 px-2 text-xs"
-                                >
-                                  {collapsedSections[section.type] ? (
-                                    <>
-                                      <ChevronDown size={14} />
-                                      Expand
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ChevronUp size={14} />
-                                      Collapse
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <CardDescription className="text-xs">
-                              Question set grouped by type for easier review.
-                            </CardDescription>
-                          </CardHeader>
-
-                          {!collapsedSections[section.type] && (
-                            <CardContent className="space-y-4 px-5 pb-5">
-                              {/* Display section-level rubric if available */}
-                              {section.questions.some(q => q.rubric && q.rubric.trim() !== "null") && (
-                                <div className="mb-6">
-                                  <RubricDisplay 
-                                    rubric={section.questions.find(q => q.rubric && q.rubric.trim() !== "null")?.rubric || ""} 
-                                  />
-                                  <Separator className="mt-6 bg-border/40" />
-                                </div>
-                              )}
-
-                              {section.questions.map((qstn) => (
-                                <article
-                                  key={qstn.id}
-                                  className="rounded-xl border border-border/70 bg-card p-5 space-y-3"
-                                >
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <Badge className="bg-primary/10 text-primary border-0 font-bold">#{qstn.num}</Badge>
-                                    <Badge variant="outline" className="font-semibold">{qstn.maxPoints} pts</Badge>
-                                    {qstn.aiConfidence && (
-                                      <Badge 
-                                        variant="secondary" 
-                                        className={`gap-1 border-0 font-bold ${getConfidenceMetadata(qstn.aiConfidence).className}`}
-                                      >
-                                        <Sparkles size={12} className={getConfidenceMetadata(qstn.aiConfidence).iconColor} />
-                                        {getConfidenceMetadata(qstn.aiConfidence).label}
-                                      </Badge>
+                  {activeTab === "answer-key" && (
+                    <div className="max-w-4xl mx-auto space-y-4">
+                      {organizedQuestions.map((section, i) => (
+                        <motion.div
+                          key={section.type}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: i * 0.1 }}
+                        >
+                          <Card className="overflow-hidden border-border/60 shadow-sm">
+                            <CardHeader className="border-b bg-muted/25 px-5 py-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <CardTitle className="text-base font-semibold">{formatQuestionTypeLabel(section.type)}</CardTitle>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="font-bold">{section.questions.length} questions</Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleSection(section.type)}
+                                    className="h-8 gap-1 px-2 text-xs"
+                                  >
+                                    {collapsedSections[section.type] ? (
+                                      <>
+                                        <ChevronDown size={14} />
+                                        Expand
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ChevronUp size={14} />
+                                        Collapse
+                                      </>
                                     )}
-                                  </div>
+                                  </Button>
+                                </div>
+                              </div>
+                              <CardDescription className="text-xs">
+                                Question set grouped by type for easier review.
+                              </CardDescription>
+                            </CardHeader>
 
-                                  <div className={`text-sm leading-relaxed whitespace-pre-wrap ${
-                                    isLikelyCode(qstn.text) ? "font-mono" : "font-medium"
-                                  }`}>
-                                    {formatAssessmentText(qstn.text)}
+                            {!collapsedSections[section.type] && (
+                              <CardContent className="space-y-4 px-5 pb-5">
+                                {/* Display section-level rubric if available */}
+                                {section.questions.some(q => q.rubric && q.rubric.trim() !== "null") && (
+                                  <div className="mb-6">
+                                    <RubricDisplay 
+                                      rubric={section.questions.find(q => q.rubric && q.rubric.trim() !== "null")?.rubric || ""} 
+                                    />
+                                    <Separator className="mt-6 bg-border/40" />
                                   </div>
+                                )}
 
-                                  {qstn.answer && qstn.answer.trim() !== "null" && qstn.answer.trim() !== "" && (
-                                    <div className="mt-4 rounded-lg bg-muted/50 p-4 border border-border/40">
-                                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                                        Suggested Answer
-                                      </p>
-                                      <div className="text-sm whitespace-pre-wrap leading-relaxed font-mono">
-                                        {formatAssessmentText(qstn.answer)}
-                                      </div>
+                                {section.questions.map((qstn) => (
+                                  <article
+                                    key={qstn.id}
+                                    className="rounded-xl border border-border/70 bg-card p-5 space-y-3"
+                                  >
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <Badge className="bg-primary/10 text-primary border-0 font-bold">#{qstn.num}</Badge>
+                                      <Badge variant="outline" className="font-semibold">{qstn.maxPoints} pts</Badge>
+                                      {qstn.aiConfidence && (
+                                        <Badge 
+                                          variant="secondary" 
+                                          className={`gap-1 border-0 font-bold ${getConfidenceMetadata(qstn.aiConfidence).className}`}
+                                        >
+                                          <Sparkles size={12} className={getConfidenceMetadata(qstn.aiConfidence).iconColor} />
+                                          {getConfidenceMetadata(qstn.aiConfidence).label}
+                                        </Badge>
+                                      )}
                                     </div>
-                                  )}
-                                </article>
-                              ))}
-                            </CardContent>
-                          )}
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
+
+                                    <div className={`text-sm leading-relaxed whitespace-pre-wrap ${
+                                      isLikelyCode(qstn.text) ? "font-mono" : "font-medium"
+                                    }`}>
+                                      {formatAssessmentText(qstn.text)}
+                                    </div>
+
+                                    {qstn.answer && qstn.answer.trim() !== "null" && qstn.answer.trim() !== "" && (
+                                      <div className="mt-4 rounded-lg bg-muted/50 p-4 border border-border/40">
+                                        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                                          Suggested Answer
+                                        </p>
+                                        <div className="text-sm whitespace-pre-wrap leading-relaxed font-mono">
+                                          {formatAssessmentText(qstn.answer)}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </article>
+                                ))}
+                              </CardContent>
+                            )}
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeTab === "submissions" && (
+                    <div className="max-w-4xl mx-auto text-center py-20">
+                      <p className="text-muted-foreground">Submissions view coming soon.</p>
+                    </div>
+                  )}
+
+                  {activeTab === "rating" && (
+                    <div className="max-w-4xl mx-auto text-center py-20">
+                      <p className="text-muted-foreground">Rating view coming soon.</p>
+                    </div>
+                  )}
                 </div>
-              </>
+              </div>
             )}
           </div>
 

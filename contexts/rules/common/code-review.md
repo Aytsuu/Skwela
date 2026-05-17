@@ -67,8 +67,8 @@ Use these agents for code review:
 | **security-reviewer** | Security vulnerabilities, OWASP Top 10 |
 | **typescript-reviewer** | TypeScript/JavaScript specific issues |
 | **python-reviewer** | Python specific issues |
-| **go-reviewer** | Go specific issues |
-| **rust-reviewer** | Rust specific issues |
+| **comment-analyzer** | Comment quality, clarity, and documentation gaps |
+| **silent-failure-hunter** | Swallowed errors and missing failure handling |
 
 ## Review Workflow
 

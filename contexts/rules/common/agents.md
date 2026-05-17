@@ -2,7 +2,7 @@
 
 ## Available Agents
 
-Located in `~/.claude/agents/`:
+Located in `contexts/agents/`:
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
@@ -11,11 +11,19 @@ Located in `~/.claude/agents/`:
 | tdd-guide | Test-driven development | New features, bug fixes |
 | code-reviewer | Code review | After writing code |
 | security-reviewer | Security analysis | Before commits |
-| build-error-resolver | Fix build errors | When build fails |
-| e2e-runner | E2E testing | Critical user flows |
+| build-error-resolver | Fix build/type errors | When build fails |
 | refactor-cleaner | Dead code cleanup | Code maintenance |
 | doc-updater | Documentation | Updating docs |
-| rust-reviewer | Rust code review | Rust projects |
+| docs-lookup | Documentation lookup via Context7 | API/docs questions |
+| python-reviewer | Python code review | Python projects |
+| typescript-reviewer | TypeScript/JavaScript code review | TypeScript/JavaScript projects |
+| code-architect | Code architecture analysis | Structural decisions |
+| code-explorer | Codebase exploration and navigation | Understanding unfamiliar code |
+| code-simplifier | Code simplification and clarity | Reducing complexity |
+| comment-analyzer | Code comment quality analysis | Documentation review |
+| performance-optimizer | Performance profiling and tuning | Performance bottlenecks |
+| seo-specialist | SEO analysis and optimization | Search visibility |
+| silent-failure-hunter | Detect silent failures and swallowed errors | Reliability audits |
 
 ## Immediate Agent Usage
 
