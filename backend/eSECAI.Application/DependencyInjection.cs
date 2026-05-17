@@ -3,6 +3,7 @@ using esecai.Application.UseCases.Classrooms;
 using esecai.Application.UseCases.Auth;
 using esecai.Application.UseCases.Assessments;
 using esecai.Application.UseCases.Questions;
+using esecai.Application.UseCases.Releases;
 
 namespace esecai.Application;
 
@@ -39,6 +40,10 @@ public static class DependencyInjection
 
         // Register Question Use Cases
         services.AddScoped<GetQuestionUseCase>();
+
+        // Register Release Use Cases
+        services.AddScoped<GetReleaseUseCase>();
+        services.AddScoped<ManageReleaseUseCase>();
 
         return services;
     }

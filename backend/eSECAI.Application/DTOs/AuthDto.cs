@@ -7,7 +7,8 @@ public record AuthResponse(
     Guid userId,
     string email,
     string displayName,
-    string displayImage
+    string displayImage,
+    bool isAdmin
 );
 public record LoginRequest(string email, string password);
 public record RefreshTokenRequest(string accessToken, string refreshToken);

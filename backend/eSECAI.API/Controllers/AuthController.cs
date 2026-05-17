@@ -62,7 +62,8 @@ public class AuthController : ControllerBase
             userId = freshData.user_id,
             email = freshData.email,
             displayName = freshData.display_name,
-            displayImage = freshData.display_image
+            displayImage = freshData.display_image,
+            isAdmin = freshData.is_admin
         });
     }
     
@@ -88,7 +89,8 @@ public class AuthController : ControllerBase
             return Ok(new {
                 userId = user.userId,
                 email = user.email,
-                name = user.displayName
+                name = user.displayName,
+                isAdmin = user.isAdmin
             });
         }
         catch (EmailNotVerifiedException)
@@ -182,7 +184,8 @@ public class AuthController : ControllerBase
                 return Ok(new {
                     userId = user.userId,
                     email = user.email,
-                    name = user.displayName
+                    name = user.displayName,
+                    isAdmin = user.isAdmin
                 });
             }
         }
@@ -369,7 +372,7 @@ public class AuthController : ControllerBase
         SetTokenCookies(user.accessToken, user.refreshToken);
         
         // Redirect to frontend with tokens in query string
-        return Redirect($"{frontendBaseUrl}/authentication/callback?userId={user.userId}&email={email}&displayName={displayName}&displayImage={displayImage}");
+        return Redirect($"{frontendBaseUrl}/authentication/callback?userId={user.userId}&email={email}&displayName={displayName}&displayImage={displayImage}&isAdmin={user.isAdmin}");
     }
 
     /// <summary>

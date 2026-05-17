@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\esecai.API\esecai.API.csproj" />
     <ProjectReference Include="..\esecai.Infrastructure\esecai.Infrastructure.csproj" />
     <ProjectReference Include="..\esecai.Application\esecai.Application.csproj" />
     <ProjectReference Include="..\esecai.Domain\esecai.Domain.csproj" />

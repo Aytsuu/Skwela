@@ -186,10 +186,12 @@ public static class DependencyInjection
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IMinioFileService, MinioFileService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IReleaseNotificationService, ReleaseNotificationService>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<IPdfService, PdfService>();  
         services.AddScoped<IAIClientService, AIClientService>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();
+        services.AddScoped<IReleaseRepository, ReleaseRepository>();
 
         return services;
     }

@@ -25,6 +25,9 @@ public class AppDbContext : DbContext
     public DbSet<Record> Records => Set<Record>();
     public DbSet<RecordAnswer> RecordAnswers => Set<RecordAnswer>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Release> Releases => Set<Release>();
+    public DbSet<UserReleaseRead> UserReleaseReads => Set<UserReleaseRead>();
+    public DbSet<UserReleaseDismiss> UserReleaseDismisses => Set<UserReleaseDismiss>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -173,6 +176,65 @@ public class AppDbContext : DbContext
             entity.Property(e => e.notif_message);
             entity.Property(e => e.notif_is_read);
             entity.Property(e => e.notif_created_at);
+        });
+
+        modelBuilder.Entity<Release>(entity =>
+        {
+            entity.HasKey(e => e.release_id);
+            entity.Property(e => e.release_version).HasMaxLength(50);
+            entity.Property(e => e.release_title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.release_summary).IsRequired().HasMaxLength(400);
+            entity.Property(e => e.release_body).IsRequired();
+            entity.Property(e => e.release_status).IsRequired().HasMaxLength(20).HasDefaultValue("draft");
+            entity.Property(e => e.release_created_at);
+            entity.Property(e => e.release_updated_at);
+            entity.Property(e => e.release_published_at);
+            entity.HasIndex(e => e.release_status);
+            entity.HasIndex(e => e.release_published_at);
+            entity.HasOne(e => e.created_by_user)
+                .WithMany()
+                .HasForeignKey(e => e.created_by_user_id)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+            entity.HasOne(e => e.published_by_user)
+                .WithMany()
+                .HasForeignKey(e => e.published_by_user_id)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+        });
+
+        modelBuilder.Entity<UserReleaseRead>(entity =>
+        {
+            entity.HasKey(e => e.user_release_read_id);
+            entity.Property(e => e.read_at);
+            entity.HasIndex(e => new { e.user_id, e.release_id }).IsUnique();
+            entity.HasOne(e => e.user)
+                .WithMany()
+                .HasForeignKey(e => e.user_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+            entity.HasOne(e => e.release)
+                .WithMany()
+                .HasForeignKey(e => e.release_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<UserReleaseDismiss>(entity =>
+        {
+            entity.HasKey(e => e.user_release_dismiss_id);
+            entity.Property(e => e.dismissed_at);
+            entity.HasIndex(e => new { e.user_id, e.release_id }).IsUnique();
+            entity.HasOne(e => e.user)
+                .WithMany()
+                .HasForeignKey(e => e.user_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+            entity.HasOne(e => e.release)
+                .WithMany()
+                .HasForeignKey(e => e.release_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
         });
     }
 

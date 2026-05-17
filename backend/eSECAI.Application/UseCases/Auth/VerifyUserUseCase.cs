@@ -64,7 +64,8 @@ public class VerifyUserUseCase
         user.user_id,
         user.email ?? "",
         user.display_name,
-        user.display_image
+        user.display_image,
+        user.is_admin
         );
     }
 
