@@ -1,36 +1,5 @@
 {
   "sec": "Test V: Hand Tracing / Code Analysis (20 pts)",
-  "inst": "Directions: Trace the given code and write the exact output on the space provided. Show your trace work for partial credit. Each item is worth 4 points.",
-  "qts": [
-    {
-      "number": 1,
-      "question": "int x = 5, y = 3;\nint result = x * y \u002B (x - y) * 2;\nConsole.WriteLine(\u0022Result: \u0022 \u002B result);\nfor (int i = 1; i \u003C= 3; i\u002B\u002B) { \nConsole.WriteLine(i \u002B \u0022 x \u0022 \u002B x \u002B \u0022 = \u0022 \u002B (i * x));",
-      "choices": [],
-      "answer": "Result: 21\n1. x 5 = 5\n2. x 5 = 10\n3. x 5 = 15"
-    },
-    {
-      "number": 2,
-      "question": "string[] fruits = {\u0022Mango\u0022, \u0022Banana\u0022, \u0022Pineapple\u0022};\nforeach (string fruit in fruits) { \nif (fruit.Length \u003E 5) \nConsole.WriteLine(fruit \u002B \u0022 has more than 5 letters.\u0022); \nelse \nConsole.WriteLine(fruit \u002B \u0022 is short.\u0022);",
-      "choices": [],
-      "answer": "Mango has more than 5 letters.\nBanana has more than 5 letters.\nPineapple has more than 5 letters."
-    },
-    {
-      "number": 3,
-      "question": "int n = 10;\nint sum = 0;\nwhile (n \u003E 0) { \nsum \u002B= n; \nn -= 3;\nConsole.WriteLine(\u0022n = \u0022 \u002B n \u002B \u0022, sum = \u0022 \u002B sum);",
-      "choices": [],
-      "answer": "n = -2, sum = 22"
-    },
-    {
-      "number": 4,
-      "question": "static int Factorial(int n) { \nif (n == 0 || n == 1) return 1; \nreturn n * Factorial(n - 1);\nConsole.WriteLine(Factorial(4));",
-      "choices": [],
-      "answer": "24"
-    },
-    {
-      "number": 5,
-      "question": "class Animal { \npublic virtual void Sound() { Console.WriteLine(\u0022...\u0022); }\n\nclass Dog : Animal { \npublic override void Sound() { Console.WriteLine(\u0022Woof!\u0022); }\n\nAnimal a = new Dog();\na.Sound();",
-      "choices": [],
-      "answer": "Woof!"
-    }
-  ]
+  "inst": "Directions: Trace the given code and write the exact output on the space provided. Show your trace work",
+  "qts": []
 }

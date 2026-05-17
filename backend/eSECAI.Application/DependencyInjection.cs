@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<GetClassroomUseCase>();
         services.AddScoped<DeleteClassroomUseCase>();
         services.AddScoped<UpdateClassroomUseCase>();
+        services.AddScoped<ManageStudentUseCase>();
 
         // Register Auth Use Cases
         services.AddScoped<CreateUserUseCase>();

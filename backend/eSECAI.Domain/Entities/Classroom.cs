@@ -24,6 +24,7 @@ public class Classroom
 
     // Collections
     public ICollection<Assessment> assessments { get; set; } = new List<Assessment>();
+    public ICollection<Student> students { get; set; } = new List<Student>();
 
     /// <summary>
     /// Factory method for creating a new Classroom with domain validation

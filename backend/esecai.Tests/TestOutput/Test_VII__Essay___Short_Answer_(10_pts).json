@@ -1,18 +1,5 @@
 {
   "sec": "Test VII: Essay / Short Answer (10 pts)",
-  "inst": "Directions: Answer the following questions in 3 to 5 sentences each. Be concise, clear, and use proper technical terminology. Each item is worth 5 points.",
-  "qts": [
-    {
-      "number": 1,
-      "question": "Explain the concept of Object-Oriented Programming (OOP) and briefly describe each of its four fundamental principles: Encapsulation, Abstraction, Inheritance, and Polymorphism. Give a real-world analogy for any one of the four principles.",
-      "choices": [],
-      "answer": ""
-    },
-    {
-      "number": 2,
-      "question": "Differentiate between a \u0022for\u0022 loop, a \u0022while\u0022 loop, and a \u0022do-while\u0022 loop in C#. Describe a specific scenario or use case where each type of loop is the most appropriate choice, and explain why.",
-      "choices": [],
-      "answer": ""
-    }
-  ]
+  "inst": "Directions: Answer the following questions in 3 to 5 sentences each. Be concise, clear, and use proper",
+  "qts": []
 }

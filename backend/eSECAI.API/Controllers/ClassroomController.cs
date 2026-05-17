@@ -20,6 +20,7 @@ public class ClassroomController : ControllerBase
     private readonly GetClassroomUseCase _getUseCase;
     private readonly DeleteClassroomUseCase _deleteUseCase;
     private readonly UpdateClassroomUseCase _updateUseCase;
+    private readonly ManageStudentUseCase _manageStudentUseCase;
 
     /// <summary>
     /// Initializes the ClassroomsController with required use cases
@@ -31,13 +32,15 @@ public class ClassroomController : ControllerBase
         CreateClassroomUseCase createUseCase, 
         GetClassroomUseCase getUseCase, 
         DeleteClassroomUseCase deleteUseCase,
-        UpdateClassroomUseCase updateUseCase
+        UpdateClassroomUseCase updateUseCase,
+        ManageStudentUseCase manageStudentUseCase
     )
     {
         _createUseCase = createUseCase;
         _getUseCase = getUseCase;
         _deleteUseCase = deleteUseCase;
         _updateUseCase = updateUseCase;
+        _manageStudentUseCase = manageStudentUseCase;
     }
 
     // This record only lives in the API/Controller layer (Must be placed here since we need IFormFile)
@@ -51,6 +54,18 @@ public class ClassroomController : ControllerBase
         string? name,
         string? description,
         IFormFile? bannerFile
+    );
+
+    public record CreateStudentRequestWeb(
+        string fname,
+        string? mname,
+        string lname
+    );
+
+    public record UpdateStudentRequestWeb(
+        string fname,
+        string? mname,
+        string lname
     );
 
     /// <summary>
@@ -215,6 +230,89 @@ public class ClassroomController : ControllerBase
         catch (UnauthorizedAccessException uaEx)
         {
             return Unauthorized(uaEx.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{classId}/students")]
+    public async Task<IActionResult> CreateStudent(Guid classId, [FromBody] CreateStudentRequestWeb request)
+    {
+        try
+        {
+            var student = await _manageStudentUseCase.CreateStudentAsync(new CreateStudentRequest(
+                classId,
+                request.fname,
+                request.mname,
+                request.lname));
+
+            return Ok(student);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{classId}/students/import")]
+    public async Task<IActionResult> ImportStudents(Guid classId, IFormFile file, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("CSV file is required.");
+            }
+
+            if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Only CSV files are supported.");
+            }
+
+            await using var stream = file.OpenReadStream();
+            var students = await _manageStudentUseCase.ImportStudentsAsync(classId, stream, cancellationToken);
+
+            return Ok(students);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPatch("{classId}/students/{studentId}")]
+    public async Task<IActionResult> UpdateStudent(Guid classId, Guid studentId, [FromBody] UpdateStudentRequestWeb request)
+    {
+        try
+        {
+            var student = await _manageStudentUseCase.UpdateStudentAsync(new UpdateStudentRequest(
+                classId,
+                studentId,
+                request.fname,
+                request.mname,
+                request.lname));
+
+            return Ok(student);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("{classId}/students/{studentId}")]
+    public async Task<IActionResult> DeleteStudent(Guid classId, Guid studentId)
+    {
+        try
+        {
+            await _manageStudentUseCase.DeleteStudentAsync(classId, studentId);
+            return Ok();
         }
         catch (Exception ex)
         {

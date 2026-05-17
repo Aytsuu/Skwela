@@ -111,13 +111,26 @@ public class AuthRepository : IAuthRepository
     /// <exception cref="UnauthorizedAccessException">Thrown if user not found or password is invalid</exception>
     public async Task<User> LoginAsync(string email, string password)
     {
-        // Find user by username
-        var user = await CurrentUserAsync(null, email);
+        // Login should not reveal whether the email exists.
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.email == email);
 
-        // Validate user exists and password is correct
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.password))
+        if (user == null || string.IsNullOrWhiteSpace(user.password))
         {
-            throw new UnauthorizedAccessException("Invalid credentials.");
+            throw new UnauthorizedAccessException("Incorrect email or password");
+        }
+
+        try
+        {
+            if (!BCrypt.Net.BCrypt.Verify(password, user.password))
+            {
+                throw new UnauthorizedAccessException("Incorrect email or password");
+            }
+        }
+        catch (ArgumentException)
+        {
+            // Some accounts (for example OAuth-only users) may not have a BCrypt hash stored.
+            // Treat this as a normal auth failure rather than leaking verifier internals.
+            throw new UnauthorizedAccessException("Incorrect email or password");
         }
 
         // Generate new refresh token and update expiry

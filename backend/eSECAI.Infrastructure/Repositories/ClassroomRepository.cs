@@ -52,6 +52,7 @@ public class ClassroomRepository : IClassroomRepository
         // Query classrooms by creator user_id
         return await _context.Classrooms
             .Include(c => c.user)
+            .Include(c => c.students)
             .Where(c => c.user_id == userId)
             .ToListAsync();
     }
@@ -67,6 +68,7 @@ public class ClassroomRepository : IClassroomRepository
         // Load classroom with creator information
         var classroom = await _context.Classrooms
             .Include(c => c.user)
+            .Include(c => c.students)
             .FirstOrDefaultAsync(c => c.class_id == classId);
 
         if (classroom == null)
@@ -77,11 +79,62 @@ public class ClassroomRepository : IClassroomRepository
         return classroom;
     }
 
+    public async Task<Student> AddStudentAsync(Student student)
+    {
+        _context.Students.Add(student);
+        await _context.SaveChangesAsync();
+
+        return student;
+    }
+
+    public async Task<IReadOnlyList<Student>> AddStudentsAsync(IEnumerable<Student> students)
+    {
+        var studentList = students.ToList();
+        _context.Students.AddRange(studentList);
+        await _context.SaveChangesAsync();
+
+        return studentList;
+    }
+
+    public async Task<Student> GetStudentAsync(Guid classId, Guid studentId)
+    {
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.class_id == classId && s.student_id == studentId);
+
+        if (student == null)
+        {
+            throw new KeyNotFoundException("Student not found.");
+        }
+
+        return student;
+    }
+
+    public async Task<bool> StudentExistsAsync(
+        Guid classId,
+        string firstName,
+        string middleName,
+        string lastName,
+        Guid? excludeStudentId = null)
+    {
+        return await _context.Students.AnyAsync(student =>
+            student.class_id == classId &&
+            student.student_fname == firstName &&
+            student.student_mname == middleName &&
+            student.student_lname == lastName &&
+            (!excludeStudentId.HasValue || student.student_id != excludeStudentId.Value));
+    }
+
     /// <summary>
     /// Update classroom data
     /// </summary>
     public async Task UpdateClassroomAsync()
     {
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteStudentAsync(Student student)
+    {
+        _context.Students.Remove(student);
         await _context.SaveChangesAsync();
     }
 

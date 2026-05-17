@@ -59,7 +59,8 @@ public class CreateClassroomUseCase
             instance.class_description,
             instance.class_banner,
             instance.class_created_at,
-            null
+            null,
+            []
         );
     }
 }

@@ -220,16 +220,17 @@ namespace esecai.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasDefaultValue("pending");
 
-                    b.Property<string>("rec_student_name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<float>("rec_total_score")
                         .HasColumnType("real");
+
+                    b.Property<Guid>("student_id")
+                        .HasColumnType("uuid");
 
                     b.HasKey("rec_id");
 
                     b.HasIndex("ass_id");
+
+                    b.HasIndex("student_id");
 
                     b.ToTable("Records");
                 });
@@ -279,6 +280,44 @@ namespace esecai.Infrastructure.Migrations
                     b.HasIndex("rec_id");
 
                     b.ToTable("RecordAnswers");
+                });
+
+            modelBuilder.Entity("esecai.Domain.Entities.Student", b =>
+                {
+                    b.Property<Guid>("student_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("class_id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("student_created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("student_fname")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("student_lname")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("student_mname")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("student_updated_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("student_id");
+
+                    b.HasIndex("class_id", "student_fname", "student_mname", "student_lname")
+                        .IsUnique();
+
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("esecai.Domain.Entities.User", b =>
@@ -391,7 +430,15 @@ namespace esecai.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("esecai.Domain.Entities.Student", "student")
+                        .WithMany("records")
+                        .HasForeignKey("student_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("assessment");
+
+                    b.Navigation("student");
                 });
 
             modelBuilder.Entity("esecai.Domain.Entities.RecordAnswer", b =>
@@ -413,6 +460,17 @@ namespace esecai.Infrastructure.Migrations
                     b.Navigation("record");
                 });
 
+            modelBuilder.Entity("esecai.Domain.Entities.Student", b =>
+                {
+                    b.HasOne("esecai.Domain.Entities.Classroom", "classroom")
+                        .WithMany("students")
+                        .HasForeignKey("class_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("classroom");
+                });
+
             modelBuilder.Entity("esecai.Domain.Entities.Assessment", b =>
                 {
                     b.Navigation("questions");
@@ -423,6 +481,8 @@ namespace esecai.Infrastructure.Migrations
             modelBuilder.Entity("esecai.Domain.Entities.Classroom", b =>
                 {
                     b.Navigation("assessments");
+
+                    b.Navigation("students");
                 });
 
             modelBuilder.Entity("esecai.Domain.Entities.Question", b =>
@@ -435,6 +495,11 @@ namespace esecai.Infrastructure.Migrations
             modelBuilder.Entity("esecai.Domain.Entities.Record", b =>
                 {
                     b.Navigation("record_answers");
+                });
+
+            modelBuilder.Entity("esecai.Domain.Entities.Student", b =>
+                {
+                    b.Navigation("records");
                 });
 
             modelBuilder.Entity("esecai.Domain.Entities.User", b =>

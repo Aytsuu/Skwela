@@ -97,11 +97,7 @@ public class AuthController : ControllerBase
         }
         catch (UnauthorizedAccessException)
         {
-            return Unauthorized("Invalid credentials");
-        }
-        catch (KeyNotFoundException knfEx)
-        {
-            return NotFound(knfEx.Message);
+            return Unauthorized("Incorrect email or password");
         }
     }
 

@@ -1,24 +1,5 @@
 {
   "sec": "Test VI: Programming / Problem Solving (15 pts)",
-  "inst": "Directions: Write a complete and working C# console program for each problem. Follow proper naming conventions, indentation, and syntax. Partial credit may be given for correct logic even with minor syntax errors. Each item is worth 5 points.",
-  "qts": [
-    {
-      "number": 1,
-      "question": "Write a C# program that asks the user to input 5 integers and displays their sum, average, highest value, and lowest value.",
-      "choices": [],
-      "answer": ""
-    },
-    {
-      "number": 2,
-      "question": "Create a class called \u0022Student\u0022 with the following attributes: name (string), studentNumber (string), and GPA (double). Include a constructor, appropriate getters and setters, and a method called DisplayInfo() that prints all student information in a formatted manner. Instantiate the class in the Main method and call DisplayInfo().",
-      "choices": [],
-      "answer": ""
-    },
-    {
-      "number": 3,
-      "question": "Write a C# program that reads 10 integers from the user, stores them in an array, and uses a method called BubbleSort() to sort the array in ascending order. Display the unsorted and sorted arrays.",
-      "choices": [],
-      "answer": ""
-    }
-  ]
+  "inst": "Directions: Write a complete and working C# console program for each problem. Follow proper naming",
+  "qts": []
 }

@@ -12,13 +12,21 @@ public record UserData(
   string displayImage
 );
 
+public record StudentDataResponse(
+    Guid studentId,
+    string fname,
+    string mname,
+    string lname
+);
+
 public record ClassroomDataResponse(
     Guid classId, 
     string className, 
     string classDescription, 
     string classBanner,
     DateTime classCreatedAt,
-    UserData? creator
+    UserData? creator,
+    IReadOnlyList<StudentDataResponse> students
 );
 
 public record CreateClassroomRequest(
@@ -37,4 +45,19 @@ public record UpdateClassroomRequest(
     Stream? bannerStream,
     string? contentType,
     string? fileName
+);
+
+public record CreateStudentRequest(
+    Guid classId,
+    string fname,
+    string? mname,
+    string lname
+);
+
+public record UpdateStudentRequest(
+    Guid classId,
+    Guid studentId,
+    string fname,
+    string? mname,
+    string lname
 );

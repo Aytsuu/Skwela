@@ -73,7 +73,16 @@ public class UpdateClassroomUseCase
                 classroom.user.email,
                 classroom.user.display_name,
                 classroom.user.display_image
-            )
+            ),
+            classroom.students
+                .OrderBy(student => student.student_lname)
+                .ThenBy(student => student.student_fname)
+                .Select(student => new StudentDataResponse(
+                    student.student_id,
+                    student.student_fname,
+                    student.student_mname,
+                    student.student_lname))
+                .ToList()
         );
     }
 }

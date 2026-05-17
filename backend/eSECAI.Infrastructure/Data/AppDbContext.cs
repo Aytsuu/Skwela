@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Classroom> Classrooms => Set<Classroom>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
+    public DbSet<Student> Students => Set<Student>();
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<Record> Records => Set<Record>();
     public DbSet<RecordAnswer> RecordAnswers => Set<RecordAnswer>();
@@ -65,6 +66,22 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.class_id); // Index for direct classroom lookup
         });
 
+        modelBuilder.Entity<Student>(entity =>
+        {
+            entity.HasKey(e => e.student_id);
+            entity.Property(e => e.student_fname).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.student_mname).HasMaxLength(150);
+            entity.Property(e => e.student_lname).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.student_created_at);
+            entity.Property(e => e.student_updated_at);
+            entity.HasOne(e => e.classroom)
+                .WithMany(e => e.students)
+                .HasForeignKey(e => e.class_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+            entity.HasIndex(e => new { e.class_id, e.student_fname, e.student_mname, e.student_lname }).IsUnique();
+        });
+
         modelBuilder.Entity<Assessment>(entity => 
         {
             entity.HasKey(e => e.ass_id);
@@ -104,7 +121,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Record>(entity => 
         {
             entity.HasKey(e => e.rec_id);
-            entity.Property(e => e.rec_student_name);
             entity.Property(e => e.rec_scan_url);
             entity.Property(e => e.rec_total_score);
             entity.Property(e => e.rec_percentage);
@@ -115,6 +131,11 @@ public class AppDbContext : DbContext
                 .WithMany(e => e.records)
                 .HasForeignKey(e => e.ass_id)
                 .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+            entity.HasOne(e => e.student)
+                .WithMany(e => e.records)
+                .HasForeignKey(e => e.student_id)
+                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired();
         });
 

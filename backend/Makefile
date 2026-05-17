@@ -14,7 +14,7 @@ dup:
 	docker compose up -d
 
 ddown:
-	docker compose down
+	docker compose down -v
 
 # Usage: make migration-add name=AddNewFeature
 migadd:

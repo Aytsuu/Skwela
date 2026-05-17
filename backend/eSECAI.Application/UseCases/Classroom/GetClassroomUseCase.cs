@@ -45,7 +45,16 @@ public class GetClassroomUseCase
                 c.class_description,
                 signedLink,
                 c.class_created_at,
-                null
+                null,
+                c.students
+                    .OrderBy(student => student.student_lname)
+                    .ThenBy(student => student.student_fname)
+                    .Select(student => new StudentDataResponse(
+                        student.student_id,
+                        student.student_fname,
+                        student.student_mname,
+                        student.student_lname))
+                    .ToList()
             ));
         }
         return responseList;
@@ -74,6 +83,11 @@ public class GetClassroomUseCase
             throw new InvalidOperationException($"The creator data for classroom {classroom.class_id} was not loaded from the database.");
         }
 
+        if (classroom.user_id != userId)
+        {
+            throw new UnauthorizedAccessException("You do not have access to this classroom.");
+        }
+
         string signedLink = string.Empty;
 
         if (!string.IsNullOrWhiteSpace(classroom.class_banner))
@@ -93,7 +107,16 @@ public class GetClassroomUseCase
                 classroom.user.email,
                 classroom.user.display_name,
                 classroom.user.display_image
-            )         
+            ),
+            classroom.students
+                .OrderBy(student => student.student_lname)
+                .ThenBy(student => student.student_fname)
+                .Select(student => new StudentDataResponse(
+                    student.student_id,
+                    student.student_fname,
+                    student.student_mname,
+                    student.student_lname))
+                .ToList()
         );
     }
 }
