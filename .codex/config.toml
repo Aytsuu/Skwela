@@ -19,14 +19,6 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "live"
 
-# External notifications receive a JSON payload on stdin.
-notify = [
-  "terminal-notifier",
-  "-title", "Codex ECC",
-  "-message", "Task completed!",
-  "-sound", "default",
-]
-
 # Persistent instructions are appended to every prompt (additive, unlike
 # model_instructions_file which replaces AGENTS.md).
 persistent_instructions = "Follow project AGENTS.md guidelines. Use available MCP servers when they can help."
@@ -50,9 +42,6 @@ command = "npx"
 args = ["-y", "@upstash/context7-mcp@latest"]
 startup_timeout_sec = 30
 
-[mcp_servers.exa]
-url = "https://mcp.exa.ai/mcp"
-
 [mcp_servers.memory]
 command = "npx"
 args = ["-y", "@modelcontextprotocol/server-memory"]
@@ -68,38 +57,14 @@ command = "npx"
 args = ["-y", "@modelcontextprotocol/server-sequential-thinking"]
 startup_timeout_sec = 30
 
-# Additional MCP servers (uncomment as needed):
-# [mcp_servers.supabase]
-# command = "npx"
-# args = ["-y", "supabase-mcp-server@latest", "--read-only"]
-#
-# [mcp_servers.firecrawl]
-# command = "npx"
-# args = ["-y", "firecrawl-mcp"]
-#
-# [mcp_servers.fal-ai]
-# command = "npx"
-# args = ["-y", "fal-ai-mcp-server"]
-#
-# [mcp_servers.cloudflare]
-# command = "npx"
-# args = ["-y", "@cloudflare/mcp-server-cloudflare"]
+[mcp_servers.firecrawl]
+command = "npx"
+args = ["-y", "firecrawl-mcp"]
 
 [features]
 # Codex multi-agent collaboration is stable and on by default in current builds.
 # Keep the explicit toggle here so the repo documents its expectation clearly.
 multi_agent = true
-
-# Profiles — switch with `codex -p <name>`
-[profiles.strict]
-approval_policy = "on-request"
-sandbox_mode = "read-only"
-web_search = "cached"
-
-[profiles.yolo]
-approval_policy = "never"
-sandbox_mode = "workspace-write"
-web_search = "live"
 
 [agents]
 # Multi-agent role limits and local role definitions.
