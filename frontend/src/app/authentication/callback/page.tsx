@@ -15,6 +15,7 @@ const Callback = () => {
       const email = urlParams.get('email');
       const displayName = urlParams.get('displayName');
       const displayImage = urlParams.get('displayImage');
+      const isAdmin = urlParams.get('isAdmin') === 'true';
 
       if (userId && email && displayName && displayImage) {
           // Set user profile
@@ -22,7 +23,8 @@ const Callback = () => {
           userId: userId,
           email: email,
           displayName: displayName,
-          displayImage: displayImage
+          displayImage: displayImage,
+          isAdmin
         });
 
         router.replace('/dashboard');
@@ -30,7 +32,7 @@ const Callback = () => {
         router.replace('/?error=auth_failed')
       }
 
-  }, []);
+  }, [router, storeUser, urlParams]);
 
   return <div>Authenticating...</div>;
 }

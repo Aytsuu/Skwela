@@ -1,14 +1,14 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { useNotification } from "@/context/NotificationContext";
 import { 
-  User, 
-  Mail, 
-  Shield, 
   Bell, 
   Globe, 
   Monitor,
-  Camera
+  Camera,
+  PencilLine,
+  Rocket
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,132 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { ReleaseEditorInput, ReleaseItem } from "@/types/release";
+import { ReleaseService } from "@/services/release.service";
+import React from "react";
+import { formatDate } from "@/helpers/dateFormatter";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+const emptyReleaseDraft: ReleaseEditorInput = {
+  version: "",
+  title: "",
+  summary: "",
+  body: ""
+};
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { refreshNotifications } = useNotification();
+  const [releaseDraft, setReleaseDraft] = React.useState<ReleaseEditorInput>(emptyReleaseDraft);
+  const [adminReleases, setAdminReleases] = React.useState<ReleaseItem[]>([]);
+  const [selectedReleaseId, setSelectedReleaseId] = React.useState<string | null>(null);
+  const [isLoadingReleases, setIsLoadingReleases] = React.useState(false);
+  const [isSavingRelease, setIsSavingRelease] = React.useState(false);
+  const [isPublishingRelease, setIsPublishingRelease] = React.useState(false);
+
+  const selectedRelease = adminReleases.find((release) => release.releaseId === selectedReleaseId) ?? null;
+
+  const syncRelease = React.useCallback((nextRelease: ReleaseItem) => {
+    setAdminReleases((current) => {
+      const remaining = current.filter((release) => release.releaseId !== nextRelease.releaseId);
+      return [nextRelease, ...remaining].sort((left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+      );
+    });
+  }, []);
+
+  const loadAdminReleases = React.useCallback(async () => {
+    if (!user?.isAdmin) {
+      return;
+    }
+
+    setIsLoadingReleases(true);
+
+    try {
+      const releases = await ReleaseService.getAdminReleases();
+      setAdminReleases(releases);
+    } finally {
+      setIsLoadingReleases(false);
+    }
+  }, [user?.isAdmin]);
+
+  React.useEffect(() => {
+    void loadAdminReleases();
+  }, [loadAdminReleases]);
+
+  const handleReleaseDraftChange = (field: keyof ReleaseEditorInput, value: string) => {
+    setReleaseDraft((current) => ({
+      ...current,
+      [field]: value
+    }));
+  };
+
+  const handleSelectRelease = (release: ReleaseItem) => {
+    setSelectedReleaseId(release.releaseId);
+    setReleaseDraft({
+      version: release.version ?? "",
+      title: release.title,
+      summary: release.summary,
+      body: release.body
+    });
+  };
+
+  const handleNewRelease = () => {
+    setSelectedReleaseId(null);
+    setReleaseDraft(emptyReleaseDraft);
+  };
+
+  const handleSaveRelease = async () => {
+    setIsSavingRelease(true);
+
+    try {
+      const payload: ReleaseEditorInput = {
+        version: releaseDraft.version?.trim() ?? "",
+        title: releaseDraft.title.trim(),
+        summary: releaseDraft.summary.trim(),
+        body: releaseDraft.body.trim()
+      };
+
+      const release = selectedReleaseId
+        ? await ReleaseService.updateDraft(selectedReleaseId, payload)
+        : await ReleaseService.createDraft(payload);
+
+      syncRelease(release);
+      setSelectedReleaseId(release.releaseId);
+      setReleaseDraft({
+        version: release.version ?? "",
+        title: release.title,
+        summary: release.summary,
+        body: release.body
+      });
+      toast.success(selectedReleaseId ? "Release draft updated" : "Release draft created");
+    } catch {
+      toast.error("Unable to save release draft");
+    } finally {
+      setIsSavingRelease(false);
+    }
+  };
+
+  const handlePublishRelease = async () => {
+    if (!selectedReleaseId) {
+      return;
+    }
+
+    setIsPublishingRelease(true);
+
+    try {
+      const release = await ReleaseService.publishRelease(selectedReleaseId);
+      syncRelease(release);
+      await refreshNotifications();
+      toast.success("Release published");
+    } catch {
+      toast.error("Unable to publish release");
+    } finally {
+      setIsPublishingRelease(false);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
@@ -128,6 +251,154 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {user?.isAdmin && (
+            <Card className="border border-border bg-card">
+              <CardHeader>
+                <CardTitle>Release Updates</CardTitle>
+                <CardDescription>Write and publish product update notes that appear in the in-app notification bell.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold">Drafts and published updates</p>
+                    <Button variant="outline" size="sm" className="h-8" onClick={handleNewRelease}>
+                      New draft
+                    </Button>
+                  </div>
+
+                  <div className="rounded-xl border border-border/70">
+                    {isLoadingReleases ? (
+                      <div className="px-4 py-6 text-sm text-muted-foreground">Loading release history...</div>
+                    ) : adminReleases.length === 0 ? (
+                      <div className="px-4 py-6 text-sm text-muted-foreground">No release notes yet.</div>
+                    ) : (
+                      <div className="max-h-[420px] overflow-y-auto">
+                        {adminReleases.map((release) => (
+                          <button
+                            key={release.releaseId}
+                            type="button"
+                            onClick={() => handleSelectRelease(release)}
+                            className={cn(
+                              "flex w-full flex-col gap-2 border-b border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/40",
+                              selectedReleaseId === release.releaseId && "bg-muted/50"
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold">{release.title}</p>
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                  release.status === "published"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-amber-100 text-amber-700"
+                                )}
+                              >
+                                {release.status}
+                              </span>
+                            </div>
+                            <p className="line-clamp-2 text-xs text-muted-foreground">{release.summary}</p>
+                            <p className="text-[11px] font-medium text-muted-foreground">
+                              {release.version ? `${release.version} • ` : ""}
+                              {formatDate(release.publishedAt ?? release.createdAt)}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {selectedRelease ? "Edit release note" : "Compose release note"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Published notes become visible to all authenticated users.
+                      </p>
+                    </div>
+                    {selectedRelease?.status === "published" && (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                        Published
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="release-version" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Version</Label>
+                      <Input
+                        id="release-version"
+                        value={releaseDraft.version ?? ""}
+                        onChange={(event) => handleReleaseDraftChange("version", event.target.value)}
+                        placeholder="e.g. 2.0.0"
+                        disabled={selectedRelease?.status === "published"}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="release-title" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Title</Label>
+                      <Input
+                        id="release-title"
+                        value={releaseDraft.title}
+                        onChange={(event) => handleReleaseDraftChange("title", event.target.value)}
+                        placeholder="What changed?"
+                        disabled={selectedRelease?.status === "published"}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="release-summary" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</Label>
+                      <Textarea
+                        id="release-summary"
+                        value={releaseDraft.summary}
+                        onChange={(event) => handleReleaseDraftChange("summary", event.target.value)}
+                        placeholder="Short bell preview copy"
+                        className="min-h-24"
+                        disabled={selectedRelease?.status === "published"}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="release-body" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Release note body</Label>
+                      <Textarea
+                        id="release-body"
+                        value={releaseDraft.body}
+                        onChange={(event) => handleReleaseDraftChange("body", event.target.value)}
+                        placeholder="Write the full update details shown in the modal."
+                        className="min-h-56"
+                        disabled={selectedRelease?.status === "published"}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap justify-end gap-3">
+                    <Button variant="outline" className="h-9" onClick={handleNewRelease}>
+                      <PencilLine size={15} className="mr-2" />
+                      Reset
+                    </Button>
+                    <Button
+                      className="h-9"
+                      onClick={() => void handleSaveRelease()}
+                      disabled={isSavingRelease || selectedRelease?.status === "published"}
+                    >
+                      {isSavingRelease ? "Saving..." : "Save draft"}
+                    </Button>
+                    <Button
+                      className="h-9 bg-emerald-600 text-white hover:bg-emerald-700"
+                      onClick={() => void handlePublishRelease()}
+                      disabled={!selectedReleaseId || isPublishingRelease || selectedRelease?.status === "published"}
+                    >
+                      <Rocket size={15} className="mr-2" />
+                      {isPublishingRelease ? "Publishing..." : "Publish"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Danger Zone */}
           <Card className="border border-destructive/30 bg-destructive/[0.03] shadow-none">

@@ -14,4 +14,5 @@ export interface UserProfile {
   email: string;
   displayName: string;
   displayImage?: string;
+  isAdmin: boolean;
 }

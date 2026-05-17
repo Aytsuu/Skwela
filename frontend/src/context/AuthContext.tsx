@@ -46,9 +46,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           userId: me.userId,
           email: me.email,
           displayName: me.displayName,
-          displayImage: me.displayImage
+          displayImage: me.displayImage,
+          isAdmin: me.isAdmin
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         // 401 on /me is expected when no session exists.
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           setUser(null);
