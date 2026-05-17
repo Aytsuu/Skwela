@@ -1,0 +1,6 @@
+{
+  "Obsidian": {
+    "description": "Obsidian vault ingestion on codex session",
+    "command": "codex --add-dir /path/to/your/Obsidian/Vaul"
+  }
+}
