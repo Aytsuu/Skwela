@@ -1,7 +1,15 @@
 "use client";
 
-import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { useDeleteClassroom, useGetClassroomData, useUpdateClassroom } from "@/hooks/use-classroom";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useCreateStudent,
+  useDeleteClassroom,
+  useDeleteStudent,
+  useGetClassroomData,
+  useImportStudents,
+  useUpdateClassroom,
+  useUpdateStudent,
+} from "@/hooks/use-classroom";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import Protected from "@/app/(main)/protected";
@@ -46,6 +54,10 @@ import {
   ArrowLeft,
   Sparkles,
   Plus,
+  Users,
+  UserPlus,
+  FileSpreadsheet,
+  PencilLine,
 } from "lucide-react";
 import { formatDate } from "@/helpers/dateFormatter";
 import { toast } from "sonner";
@@ -56,13 +68,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ClassroomForm from "../ClassroomForm";
 import { useAssessmentList, useCreateAssessment } from "@/hooks/use-assessment";
 import { useGetAssessmentQuestions } from "@/hooks/use-question";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { queryError } from "@/helpers/errorDisplay";
 import { Question } from "@/types/question";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { StudentData } from "@/types/classroom";
 
 type OrganizedSection = {
   type: string;
@@ -78,6 +93,14 @@ const QUESTION_TYPE_LABELS: Record<string, string> = {
   true_false: "TRUE OR FALSE",
   essay: "ESSAY",
 };
+
+const studentSchema = z.object({
+  fname: z.string().trim().min(1, "First name is required"),
+  mname: z.string().trim().optional(),
+  lname: z.string().trim().min(1, "Last name is required"),
+});
+
+type StudentFormValues = z.infer<typeof studentSchema>;
 
 const formatQuestionTypeLabel = (type: string) => {
   return QUESTION_TYPE_LABELS[type] ?? type.replace(/_/g, " ").toUpperCase();
@@ -309,9 +332,7 @@ const PageComponent = () => {
   const { user } = useAuth();
   const router = useRouter();
   const urlParams = useSearchParams();
-  const params = useParams();
   const classId = urlParams.get("id") as string;
-  const classSlug = params.classId as string;
 
   const form = useForm<z.infer<typeof classroomSchema>>({
     resolver: zodResolver(classroomSchema),
@@ -322,10 +343,18 @@ const PageComponent = () => {
   const [showClassroomDialog, setShowClassroomDialog] = React.useState<boolean>(false);
   const [isUpdatingClassroom, setIsUpdatingClassroom] = React.useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState<boolean>(false);
+  const [showStudentDialog, setShowStudentDialog] = React.useState<boolean>(false);
+  const [showStudentDeleteDialog, setShowStudentDeleteDialog] = React.useState<boolean>(false);
+  const [showImportStudentsDialog, setShowImportStudentsDialog] = React.useState<boolean>(false);
   const [files, setFiles] = React.useState<File[]>([]);
+  const [csvFile, setCsvFile] = React.useState<File | null>(null);
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isCreatingAssessment, setIsCreatingAssessment] = React.useState<boolean>(false);
+  const [isSavingStudent, setIsSavingStudent] = React.useState<boolean>(false);
+  const [isImportingStudents, setIsImportingStudents] = React.useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = React.useState<boolean>(false);
+  const [editingStudent, setEditingStudent] = React.useState<StudentData | null>(null);
+  const [selectedStudent, setSelectedStudent] = React.useState<StudentData | null>(null);
 
   const [selectedAssessmentId, setSelectedAssessmentId] = React.useState<string | null>(null);
   const [selectedAssessmentTitle, setSelectedAssessmentTitle] = React.useState<string | null>(null);
@@ -333,6 +362,10 @@ const PageComponent = () => {
 
   const { mutateAsync: deleteClassroom } = useDeleteClassroom();
   const { mutateAsync: updateClassroom } = useUpdateClassroom();
+  const { mutateAsync: createStudent } = useCreateStudent();
+  const { mutateAsync: updateStudent } = useUpdateStudent();
+  const { mutateAsync: deleteStudent } = useDeleteStudent();
+  const { mutateAsync: importStudents } = useImportStudents();
   const { mutateAsync: createAssessment } = useCreateAssessment();
   const { data: classroomData, isLoading: isLoadingClassroomData, error } = useGetClassroomData(
     classId,
@@ -341,12 +374,20 @@ const PageComponent = () => {
   const { data: assessments, isLoading: isLoadingAssessments } = useAssessmentList(classId);
   const {
     data: assessmentQstns,
-    error: assessmentError,
     isLoading: isLoadingQuestions,
   } = useGetAssessmentQuestions(selectedAssessmentId ?? "");
 
   // Flags
   const hasUpdate = form.formState.isDirty;
+
+  const studentForm = useForm<StudentFormValues>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: {
+      fname: "",
+      mname: "",
+      lname: "",
+    },
+  });
 
   const organizedQuestions = React.useMemo<OrganizedSection[]>(() => {
     if (!assessmentQstns || assessmentQstns.length === 0) return [];
@@ -390,24 +431,11 @@ const PageComponent = () => {
     });
   }, [organizedQuestions]);
 
-  const allCollapsed =
-    organizedQuestions.length > 0 &&
-    organizedQuestions.every((section) => collapsedSections[section.type]);
-
   const toggleSection = (type: string) => {
     setCollapsedSections((prev) => ({
       ...prev,
       [type]: !prev[type],
     }));
-  };
-
-  const setAllSectionsCollapsed = (collapsed: boolean) => {
-    setCollapsedSections(
-      organizedQuestions.reduce<Record<string, boolean>>((acc, section) => {
-        acc[section.type] = collapsed;
-        return acc;
-      }, {}),
-    );
   };
 
   React.useEffect(() => {
@@ -425,7 +453,27 @@ const PageComponent = () => {
       description: classroomData.classDescription,
       bannerFile: `${process.env.NEXT_PUBLIC_FILE_BUCKET}/${classroomData.classBanner}`,
     }, { keepDirty: false });
-  }, [classroomData, showClassroomDialog]);
+  }, [classroomData, form, showClassroomDialog]);
+
+  React.useEffect(() => {
+    if (!showStudentDialog) {
+      studentForm.reset({
+        fname: "",
+        mname: "",
+        lname: "",
+      });
+      setEditingStudent(null);
+      return;
+    }
+
+    if (editingStudent) {
+      studentForm.reset({
+        fname: editingStudent.fname,
+        mname: editingStudent.mname,
+        lname: editingStudent.lname,
+      });
+    }
+  }, [editingStudent, showStudentDialog, studentForm]);
 
   // Handlers
   const handleUpdateClassroom = async () => {
@@ -463,6 +511,87 @@ const PageComponent = () => {
       router.replace("/classrooms");
     } catch (err: unknown) {
       queryError(err as import("axios").AxiosError);
+    }
+  };
+
+  const handleOpenCreateStudentDialog = () => {
+    setEditingStudent(null);
+    setShowStudentDialog(true);
+  };
+
+  const handleOpenUpdateStudentDialog = (student: StudentData) => {
+    setEditingStudent(student);
+    setShowStudentDialog(true);
+  };
+
+  const handleSaveStudent = studentForm.handleSubmit(async (values) => {
+    try {
+      setIsSavingStudent(true);
+      const payload = {
+        fname: values.fname.trim(),
+        mname: values.mname?.trim() ?? "",
+        lname: values.lname.trim(),
+      };
+
+      if (editingStudent) {
+        await updateStudent({
+          classId,
+          studentId: editingStudent.studentId,
+          payload,
+        });
+        toast.success("Student updated");
+      } else {
+        await createStudent({
+          classId,
+          payload,
+        });
+        toast.success("Student added");
+      }
+
+      setShowStudentDialog(false);
+    } catch (err: unknown) {
+      queryError(err as import("axios").AxiosError);
+    } finally {
+      setIsSavingStudent(false);
+    }
+  });
+
+  const handleRemoveStudent = async () => {
+    if (!selectedStudent) {
+      return;
+    }
+
+    try {
+      await deleteStudent({
+        classId,
+        studentId: selectedStudent.studentId,
+      });
+      setShowStudentDeleteDialog(false);
+      setSelectedStudent(null);
+      toast.success("Student removed");
+    } catch (err: unknown) {
+      queryError(err as import("axios").AxiosError);
+    }
+  };
+
+  const handleImportStudents = async () => {
+    if (!csvFile) {
+      toast.info("Select a CSV file first");
+      return;
+    }
+
+    try {
+      setIsImportingStudents(true);
+      const formData = new FormData();
+      formData.append("file", csvFile);
+      await importStudents({ classId, data: formData });
+      setCsvFile(null);
+      setShowImportStudentsDialog(false);
+      toast.success("Students imported");
+    } catch (err: unknown) {
+      queryError(err as import("axios").AxiosError);
+    } finally {
+      setIsImportingStudents(false);
     }
   };
 
@@ -859,6 +988,104 @@ const PageComponent = () => {
                       Created {formatDate(data.classCreatedAt ?? "")}
                     </p>
                   </div>
+
+                  <div className="pt-4 border-t border-border/60 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                          <Users size={15} />
+                          Students
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Manage the roster for this classroom.
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5">
+                        {data.students?.length ?? 0}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-start gap-2"
+                        onClick={handleOpenCreateStudentDialog}
+                      >
+                        <UserPlus size={14} />
+                        Add Student
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-start gap-2"
+                        onClick={() => setShowImportStudentsDialog(true)}
+                      >
+                        <FileSpreadsheet size={14} />
+                        Import CSV
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {data.students && data.students.length > 0 ? (
+                        [...data.students]
+                          .sort((left, right) => {
+                            const leftName = `${left.lname} ${left.fname} ${left.mname}`.toLowerCase();
+                            const rightName = `${right.lname} ${right.fname} ${right.mname}`.toLowerCase();
+                            return leftName.localeCompare(rightName);
+                          })
+                          .map((student) => (
+                            <div
+                              key={student.studentId}
+                              className="rounded-xl border border-border/60 bg-card p-3 shadow-sm"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold leading-tight">
+                                    {student.lname}, {student.fname}
+                                  </p>
+                                  {student.mname && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      Middle name: {student.mname}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleOpenUpdateStudentDialog(student)}
+                                  >
+                                    <PencilLine size={14} />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      setSelectedStudent(student);
+                                      setShowStudentDeleteDialog(true);
+                                    }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-border/60 bg-card px-4 py-6 text-center">
+                          <p className="text-xs font-medium">No students yet</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            Add students individually or import a CSV with `fname,mname,lname` headers.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -980,6 +1207,103 @@ const PageComponent = () => {
         </Dialog>
 
         {/* ── Delete Dialog ── */}
+        <Dialog open={showStudentDialog} onOpenChange={setShowStudentDialog}>
+          <DialogContent className="sm:max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users size={18} />
+                {editingStudent ? "Update student" : "Add student"}
+              </DialogTitle>
+              <DialogDescription>
+                Capture the student name exactly as it should appear in classroom records.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="fname">First name</Label>
+                <Input id="fname" {...studentForm.register("fname")} />
+                {studentForm.formState.errors.fname && (
+                  <p className="text-xs text-destructive">{studentForm.formState.errors.fname.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mname">Middle name</Label>
+                <Input id="mname" {...studentForm.register("mname")} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lname">Last name</Label>
+                <Input id="lname" {...studentForm.register("lname")} />
+                {studentForm.formState.errors.lname && (
+                  <p className="text-xs text-destructive">{studentForm.formState.errors.lname.message}</p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowStudentDialog(false)}
+                disabled={isSavingStudent}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleSaveStudent} disabled={isSavingStudent}>
+                {isSavingStudent ? "Saving..." : editingStudent ? "Update student" : "Add student"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showImportStudentsDialog} onOpenChange={setShowImportStudentsDialog}>
+          <DialogContent className="sm:max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileSpreadsheet size={18} />
+                Import students from CSV
+              </DialogTitle>
+              <DialogDescription>
+                Upload a `.csv` file with the headers `fname,mname,lname`. Middle name can be blank.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="studentsCsv">CSV file</Label>
+                <Input
+                  id="studentsCsv"
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(event) => {
+                    const nextFile = event.target.files?.[0] ?? null;
+                    setCsvFile(nextFile);
+                  }}
+                />
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+                Example row: `Juan,Cruz,Dela Cruz`
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowImportStudentsDialog(false)}
+                disabled={isImportingStudents}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleImportStudents} disabled={isImportingStudents}>
+                {isImportingStudents ? "Importing..." : "Import students"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent className="rounded-2xl">
             <AlertDialogHeader>
@@ -993,6 +1317,28 @@ const PageComponent = () => {
               <AlertDialogAction
                 className="bg-destructive text-white hover:bg-destructive/90"
                 onClick={handleRemoveClassroom}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showStudentDeleteDialog} onOpenChange={setShowStudentDeleteDialog}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete student?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {selectedStudent
+                  ? `This removes ${selectedStudent.fname} ${selectedStudent.lname} from the classroom roster.`
+                  : "This removes the selected student from the classroom roster."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-white hover:bg-destructive/90"
+                onClick={handleRemoveStudent}
               >
                 Delete
               </AlertDialogAction>

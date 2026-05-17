@@ -1,5 +1,5 @@
 import { queryError } from "@/helpers/errorDisplay";
-import { ClassroomData } from "../types/classroom";
+import { ClassroomData, StudentData } from "../types/classroom";
 import { api } from "./api.service";
 
 export const ClassroomService = {
@@ -45,6 +45,46 @@ export const ClassroomService = {
           "Content-Type": "multipart/form-data"
         }
       });
+      return res.data;
+    } catch (err: any) {
+      queryError(err);
+      throw err;
+    }
+  },
+  createStudent: async (classId: string, payload: Omit<StudentData, "studentId">) => {
+    try {
+      const res = await api.post<StudentData>(`api/classroom/${classId}/students`, payload);
+      return res.data;
+    } catch (err: any) {
+      queryError(err);
+      throw err;
+    }
+  },
+  importStudents: async (classId: string, data: FormData) => {
+    try {
+      const res = await api.post<StudentData[]>(`api/classroom/${classId}/students/import`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      return res.data;
+    } catch (err: any) {
+      queryError(err);
+      throw err;
+    }
+  },
+  updateStudent: async (classId: string, studentId: string, payload: Omit<StudentData, "studentId">) => {
+    try {
+      const res = await api.patch<StudentData>(`api/classroom/${classId}/students/${studentId}`, payload);
+      return res.data;
+    } catch (err: any) {
+      queryError(err);
+      throw err;
+    }
+  },
+  deleteStudent: async (classId: string, studentId: string) => {
+    try {
+      const res = await api.delete(`api/classroom/${classId}/students/${studentId}`);
       return res.data;
     } catch (err: any) {
       queryError(err);

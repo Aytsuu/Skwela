@@ -6,11 +6,19 @@ export interface ClassroomCreateRequest {
   userId: string;
 }
 
+export interface StudentData {
+  studentId: string;
+  fname: string;
+  mname: string;
+  lname: string;
+}
+
 export interface ClassroomData {
   classId: string;
   className: string;
   classDescription: string;
   classCreatedAt: string;
   classBanner: string;
-  creator?: UserProfile
+  creator?: UserProfile;
+  students: StudentData[];
 }

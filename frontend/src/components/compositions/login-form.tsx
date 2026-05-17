@@ -72,15 +72,10 @@ export const LoginForm = () => {
           const inFiveMinutes = new Date(new Date().getTime() + 5 * 60 * 1000);
           Cookies.set("otp_email", form.getValues().email, { expires: inFiveMinutes, path: "/" })
           router.push("verify?type=login");
-        } else if (status === 404) {
-          form.setError("email", {
-            type: "server",
-            message: errorData
-          })
         } else {
           form.setError("password", {
             type: "server",
-            message: errorData
+            message: "Incorrect email or password"
           })
           form.setError("email", {})
         }
